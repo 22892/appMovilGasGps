@@ -11,6 +11,8 @@ import {
 import { Image, Divider } from '@rneui/themed';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation } from '@react-navigation/native';
+import { HttpPost, HttpGet, HttpPatch } from '../../utils/httpApi';
+import {url} from '../../utils/url'
 
 
 var { height, width } = Dimensions.get('window');
@@ -25,8 +27,15 @@ const porcentaje = (porcentaje) => {
 function ListadoEventos(props) {
 
     const {navigation} = props
-    const { primerColor, segundoColor } = props.route.params
+    const { primerColor, segundoColor, region } = props.route.params
     const navigationRetrocede = useNavigation();
+
+    const [confirmaPedido, setconfirmaPedido] = useState(false);
+    const urlApi = url()
+    const [errorApi, seterrorApi] = useState(false);
+    const [conductorLocation, setconductorLocation] = useState(true);
+    const [finalizaEntrega, setfinalizaEntrega] = useState(false);
+
 
     const [dataEventos, setdataEventos] = useState([
         {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca' },
@@ -43,11 +52,11 @@ function ListadoEventos(props) {
 
     useEffect(() => {
 
-        const backHandler = BackHandler.addEventListener(
+        /*const backHandler = BackHandler.addEventListener(
             'hardwareBackPress',
             handleHardwareBack
           );
-          return () => backHandler.remove();
+          return () => backHandler.remove();*/
         
       }, []);   
 
@@ -56,8 +65,85 @@ function ListadoEventos(props) {
     };
 
     const aceptarSolicitud = () =>{
-        navigation.navigate('MainMenuConductor')
+        navigation.navigate('MainMenuConductor', {finalizaEntrega: finalizaEntrega, conductorLocation: conductorLocation})
     } 
+
+
+
+    const obtenerUbicacionCliente = async () =>{
+
+
+        let headers = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+        var objetoEnviar = {
+
+            "punto_inicial": {
+                "latitude": region.latitude,
+                "longitude": region.longitude
+            },
+            "destinos": [
+                {
+                    "id": 37,
+                    "latitude": "-2.8839208303706068",
+                    "longitude": "-78.96712219887928"
+                },
+                {
+                    "id": 38,
+                    "latitude": "-2.887371135042596",
+                    "longitude": "-78.95708000832752"
+                },
+                {
+                    "id": 39,
+                    "latitude": "-2.8966719040980005",
+                    "longitude": "-78.97340929681019"
+                },
+                {
+                    "id": 40,
+                    "latitude": "-2.8876711610407457",
+                    "longitude": "-78.97756135636524"
+                }
+            ]
+        }
+
+
+        await HttpPost(urlApi + 'punto_cercano/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+           
+            if(status == 200){
+
+                const resul = data.ruta_corta
+
+                const locationConductor = {
+                    latitude: resul.latitude , 
+                    longitude: resul.longitude,
+                };
+
+                //console.log("nuevo dato")
+                //console.log(locationConductor)
+
+                setconductorLocation(locationConductor)
+
+                setconfirmaPedido(true)
+               
+            }
+
+          
+
+        }).catch((error) => {
+            
+            console.log("error obterr puntos")
+            seterrorApi(true)
+        })
+
+
+        console.log("objeto")
+        console.log(objetoEnviar)
+    }
+
+
+
 
 
     const itemEvento = ({ item }) => {

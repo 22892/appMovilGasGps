@@ -1,4 +1,5 @@
 import React, {useState} from 'react'
+import { useRoute } from '@react-navigation/native';
 import { View, Text, Dimensions, TouchableOpacity} from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 var { height, width } = Dimensions.get('window');
@@ -13,10 +14,14 @@ const Tab = createBottomTabNavigator();
 
 export default function MainMenuConductor(props){
 
+    const { route } = useRoute();
     const {navigation} = props
     const { primerColor, segundoColor, region } = props.route.params
     const [colorLetra, setcolorLetra] = useState("#FFFFFF")
+    
 
+    //const finalizaEntrega = route.params?.finalizaEntrega;
+    //const conductorLocation = route.params?.conductorLocation;
 
     const verSolicitudes = () =>{
         console.log("cerar sesion")
@@ -48,10 +53,10 @@ export default function MainMenuConductor(props){
                 tabBarVisible: false,
                 tabBarIcon: ({ focused }) => (
                     <View style={{ alignItems: 'center', justifyContent: 'center', top: 0, width: width / 4, marginBottom: 0, backgroundColor: primerColor, height: '100%' }}>
-                    <FontAwesome5 name="home" size={25} color="#3498db" />
+                    <FontAwesome5 name="car" size={25} color="#3498db" />
                     {focused ?
-                        <Text style={{ color: segundoColor, fontSize: 12, fontFamily: 'Poppins-Light' }}>Eventos</Text>
-                        : <Text style={{ color: colorLetra, fontSize: 12, paddingBottom: 1, fontFamily: 'Poppins-Light' }}>Eventos</Text>}
+                        <Text style={{ color: segundoColor, fontSize: 12, fontFamily: 'Poppins-Light' }}>Entregas</Text>
+                        : <Text style={{ color: colorLetra, fontSize: 12, paddingBottom: 1, fontFamily: 'Poppins-Light' }}>Entregas</Text>}
                     </View>
                 ),
                 headerRight: () => (
@@ -61,7 +66,7 @@ export default function MainMenuConductor(props){
                         <View style={{flexDirection: 'row'}}>
                             
                             <TouchableOpacity onPress={verSolicitudes}>
-                                <Text style={{marginRight: 16, color: '#D40B33'}}>
+                                <Text style={{marginRight: 16, color: 'white'}}>
                                     Ver Solicitudes
                                 </Text>
 

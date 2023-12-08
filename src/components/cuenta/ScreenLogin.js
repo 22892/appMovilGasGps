@@ -21,15 +21,15 @@ import NavigationDrawer from '../../navigation/NavigationDrawer';
 
 function ScreenLogin(props) {
 
-  
-    const screenHeight = Dimensions.get('screen').height;
+  const { primerColor, segundoColor, verificaLogin, tipoUsuario } = props.route.params
+  const screenHeight = Dimensions.get('screen').height;
 
-    useEffect(() => {
+  useEffect(() => {
 
      
  
 
-    }, []);
+  }, []);
 
 
     return (

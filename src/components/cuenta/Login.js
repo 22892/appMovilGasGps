@@ -9,10 +9,14 @@ import {
     SafeAreaView,
     ScrollView,
     KeyboardAvoidingView,
-    Keyboard
+    Keyboard,
+    AsyncStorage,
+    TextInput
 } from 'react-native';
 import { Input } from '@rneui/themed';
 import FastImage from 'react-native-fast-image';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+
 
 var { height, width } = Dimensions.get('window');
 
@@ -44,12 +48,21 @@ function Login(props){
     const txtCorreo = useRef()
     const txtContrasena = useRef()
 
+    const [txtNombre, setNombre] = useState("")
+    const [txtPass, setPass] = useState("")
+    const [showPassword, setShowPassword] = useState(false);
+
 
     const loginPress = () => {
 
         navigation.navigate('ListadoEventos')
 
     }
+
+    const handleTogglePasswordVisibility = () => {
+        setShowPassword((prevShowPassword) => !prevShowPassword);
+    };
+
 
     
     const loginError = (flag) => {
@@ -70,102 +83,105 @@ function Login(props){
 
 
     return(
-      <SafeAreaView style={{ backgroundColor: 'white', height: '100%', width: '100%', alignItems: 'center' }}>
-        <Loading text="Iniciando Sessión" isVisible={isVisibleLoading} color={segundoColor} />
 
-        <ScrollView style={{ width: '100%' }}>
+        <SafeAreaView style={{ backgroundColor: segundoColor, flex: 1 }}>
+            <Loading text="Iniciando Sessión" isVisible={isVisibleLoading} color={segundoColor} />
 
-            <View style={{ width: '100%', alignItems: 'center' }}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start' }}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS == "ios" ? "padding" : "height"}
-                    style={{ flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', width: '100%', alignItems: 'center' }}
+                    style={{ flex: 1, alignItems: 'center' }}
                 >
 
-                    <View style={{ width: '95%', marginTop: '15%', alignItems: 'center' }}>
-                        <FastImage
-
-
-                            source={require('../../assets/imagenes/logo.png')}
-                            style={{ width: porcentaje(70), height: porcentaje(20) }}
-                            resizeMode="contain"
-                        />
-
+                    <View style={{ width: '95%', marginTop: '23%', alignItems: 'center' }}>
+                    <FastImage
+                        source={require('../../assets/imagenes/logo.png')}
+                        style={{ width: porcentaje(70), height: porcentaje(20) }}
+                        resizeMode="contain"
+                    />
                     </View>
 
-
-                    <View style={{ width: '95%', marginTop: '20%', flexDirection: 'row', alignItems: 'center' }}>
-
-                        <Input
-                            placeholder={"Correo Electrónico"}
-                            ref={txtCorreo}
-                            keyboardType='email-address'
-
-                            returnKeyType='next'
-                            onSubmitEditing={() => {
-                                txtContrasena.current.focus()
-                            }}
-                            onChangeText={value => {
-                                setlogin((login) => {
-                                    return { ...login, correo: value };
-                                });
-                            }}
-                            blurOnSubmit={false}
-                            inputStyle={{ fontSize: 12, fontFamily: 'Poppins-Light' }}
-                            containerStyle={{ width: '100%', height: 25 }}
-                            inputContainerStyle={styles.formInput}
-                            errorStyle={{ fontSize: 10, fontFamily: 'Poppins-Light' }}
-                            errorMessage={erroCorreo}
-                        />
+                    <View style={{ width: '100%', textAlign: 'center', alignItems: 'center', marginTop: '8%' }}>
+                    <Text style={{ color: primerColor, fontSize: 40, fontWeight: '900' }}>RAPIDA</Text>
                     </View>
 
-                    <View style={{ width: '95%', marginTop: '7%', flexDirection: 'row', alignItems: 'center' }}>
-
-                        <Input
-                            placeholder={"Contraseña"}
-                            ref={txtContrasena}
-                            keyboardType='default'
-                            secureTextEntry={true}
-                            returnKeyType='done'
-
-                            onChangeText={value => {
-                                setlogin((login) => {
-                                    return { ...login, contrasena: value };
-                                });
-                            }}
-
-                            onSubmitEditing={() => {
-                                Keyboard.dismiss()
-                              }}
-                            blurOnSubmit={false}
-                            inputStyle={{ fontSize: 12, fontFamily: 'Poppins-Light' }}
-                            containerStyle={{ width: '100%', height: 25 }}
-                            inputContainerStyle={styles.formInput}
-                            errorStyle={{ fontSize: 10, fontFamily: 'Poppins-Light' }}
-                            errorMessage={erroPass}
-                        />
+                    <View>
+                    <Text style={{ color: primerColor, fontSize: 25 }}>DELIVERY GAS</Text>
                     </View>
-
-
-                    <TouchableOpacity
-                        onPress={() => props.navigation.navigate("OlvidasteContrasena")}
-                        style={{ width: '90%', marginTop: '5%', alignItems: 'center' }}>
-                        <Text style={{ color: "#C4C4C4", fontSize: 12, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'left' }}>Olvidastes tu Contraseña ?</Text>
-                    </TouchableOpacity>
-
-
-                    {loginError(loginErrorSession)}
-
-                    <TouchableOpacity
-                        onPress={() => loginPress()}
-                        style={{ width: '80%', backgroundColor: primerColor, marginTop: '20%', borderRadius: 20, paddingVertical: '4%' }}>
-                        <Text style={{ color: segundoColor, fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>Iniciar Sesión</Text>
-                    </TouchableOpacity>
 
                 </KeyboardAvoidingView>
+                </View>
 
-            </View>
-        </ScrollView>
-      </SafeAreaView>
+              
+               <View style={{height: porcentajeHeigt(40)}}>
+
+                
+                    {/* primer viwe*/ }
+                    <View style={{ backgroundColor: primerColor, top: porcentajeHeigt(20), justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 20, borderTopRightRadius: 20, height: porcentajeHeigt(25), overflow: 'hidden' }}>
+                    
+                
+                    
+                    </View>
+
+                    {/* segundo  viwe*/ }
+                    <View style={{backgroundColor: 'white', height: porcentajeHeigt(35), position: 'absolute', top: 0, left: '10%', right: '10%', borderRadius: 20}}>
+                        
+                        <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+
+
+                            <View style={{ width: '90%', marginTop: '10%', flexDirection: 'row', alignItems: 'center'}}>
+                                <TextInput
+                                    style={styles.input}
+                                    onChangeText={setNombre}
+                                    value={txtNombre}
+                                    placeholder="Email"
+                                    placeholderTextColor= "#9C9C9C"
+                                    borderColor="white"
+                                    borderRadius={30}
+                                />
+                                
+                            </View>
+
+                            <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', }}>
+                                <TextInput
+                                    style={styles.input}
+                                    onChangeText={setPass}
+                                    value={txtPass}
+                                    placeholder="Contraseña"
+                                    placeholderTextColor= "#9C9C9C"
+                                    borderColor="white"
+                                    borderRadius={30}
+                                    secureTextEntry={!showPassword}
+                                />
+                                <TouchableOpacity
+                                    onPress={handleTogglePasswordVisibility}
+                                    style={{ position: 'absolute', right: '13%' }} // Ajusta según tus necesidades
+                                >
+                                    <FontAwesome5 name={showPassword ? 'eye' : 'eye-slash'} size={25} color="#D8D8D8" />
+                                </TouchableOpacity>
+                                
+                            </View>
+
+
+                            <TouchableOpacity
+                        onPress={() => loginPress()}
+                        style={{ width: '80%', backgroundColor: primerColor, marginTop: '8%', borderRadius: 20, paddingVertical: '4%' }}>
+                        <Text style={{ color: 'white', fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>LOGIN</Text>
+                    </TouchableOpacity>
+                        </View>
+
+
+                    </View>
+
+
+
+               </View>
+                
+
+            </ScrollView>
+        </SafeAreaView>
 
     )
 }
@@ -182,6 +198,19 @@ const styles = StyleSheet.create({
       borderRadius: 1,
       paddingLeft: 8,
   },
+  input: {
+    height: 50,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+    backgroundColor: '#F0F0F0',
+    width: '90%',
+    color: 'black',
+    fontSize: 12, 
+    fontFamily: 'Poppins-Light',
+   
+   
+},
 
 
 })

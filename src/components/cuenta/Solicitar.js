@@ -134,7 +134,7 @@ function Solicitar(props) {
         }
 
 
-        await HttpPost(urlApi + 'punto_cercano', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+        await HttpPost(urlApi + 'punto_cercano/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
            
             if(status == 200){
 
@@ -204,6 +204,17 @@ function Solicitar(props) {
 
         <>
         <GestureHandlerRootView >
+
+            {errorApi == true? (
+                <View>
+                    <ModalVentana isVisible={errorApi} text="Error Server " title="ERROR" primerColor={primerColor} segundoColor={segundoColor}/>
+                </View>
+
+            ):(
+                <View>
+
+                </View>
+            )}
 
             {finalizaEntrega == true ? (
                 <View>

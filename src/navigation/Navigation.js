@@ -5,6 +5,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { AuthContext } from '../utils/context';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
+import {HttpPost} from '../utils/httpApi'
+import {url} from '../utils/url'
 
 
 import Home from '../components/home/Home'
@@ -28,6 +30,8 @@ const Stack = createNativeStackNavigator()
 function Navigation(props){
 
     const {navigation} = props
+    const urlApi = url()
+
 
     const [primerColor, setprimerColor] = useState("#F80C25");
     const [segundoColor, setsegundoColor] = useState("#CECECE");
@@ -37,6 +41,8 @@ function Navigation(props){
     const screenHeight = Dimensions.get('screen').height;
     const [isLoading, setIsLoading] = useState(true);
     const [error, setisError] = useState(false);
+    const [verificaLogin, setverificaLogin] = useState(false)
+    const [tipoUsuario, settipoUsuario] = useState(1)
 
 
     const [region, setRegion] = useState({
@@ -108,6 +114,8 @@ function Navigation(props){
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
               });
+
+              verificarLogin(latitude,longitude );
               
               console.log(region.latitude)
             } catch (error) {
@@ -125,6 +133,51 @@ function Navigation(props){
         }
     };
     
+
+    const verificarLogin = async (latitude, longitude) =>{
+
+        let headers = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+
+        var objetoEnviar = {
+            "identificacion": "0106625262",
+            "coordenadas": {
+                "latitude": latitude,
+                "longitude": longitude
+            }
+        }
+
+        console.log("urll")
+        console.log(urlApi+'actualiza_posicion')
+        console.log("objeto")
+        console.log(objetoEnviar)
+
+        await HttpPost(urlApi + 'actualiza_posicion/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+           
+            if(status == 200){
+
+               
+                if(data.estado == "ok"){
+                    console.log("verifica login")
+                    console.log(data.estado)
+                    setverificaLogin(true)
+                    settipoUsuario(2)
+                }
+        
+            }
+
+        
+        }).catch((error) => {
+            setverificaLogin(false)
+           console.log(error)
+        })
+
+    }
+
+
 
 
     if (isLoading) {
@@ -207,7 +260,7 @@ function Navigation(props){
                     <Stack.Screen
                         name="ScreenLogin"
                         component={ScreenLogin}
-                        initialParams={{ primerColor: primerColor }}
+                        initialParams={{ primerColor: primerColor, segundoColor: segundoColor, verificaLogin: verificaLogin, tipoUsuario: tipoUsuario }}
                         options={{ headerShown: false, title: 'sadas', headerBackTitleVisible: false }}
     
                     />
