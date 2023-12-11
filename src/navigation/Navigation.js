@@ -22,6 +22,7 @@ import ModalVentana from '../components/cuenta/ModalVentana';
 import Solicitar from '../components/cuenta/Solicitar';
 import MainMenuConductor from './MainMenuConductor';
 import ListadoEventos from '../components/home/ListadoEventos';
+import HeaderButton from './HeaderButton';
 
 const Stack = createNativeStackNavigator()
 
@@ -35,7 +36,6 @@ function Navigation(props){
 
     const [primerColor, setprimerColor] = useState("#F80C25");
     const [segundoColor, setsegundoColor] = useState("#CECECE");
-    
 
 
     const screenHeight = Dimensions.get('screen').height;
@@ -43,6 +43,7 @@ function Navigation(props){
     const [error, setisError] = useState(false);
     const [verificaLogin, setverificaLogin] = useState(false)
     const [tipoUsuario, settipoUsuario] = useState(1)
+    const [isDropdownVisible, setDropdownVisible] = useState(false);    
 
 
     const [region, setRegion] = useState({
@@ -86,6 +87,15 @@ function Navigation(props){
     const cerrar = () =>{
         backAction();
     }
+
+    const handleButtonPress = () => {
+
+        setDropdownVisible(true);
+    };
+
+
+   
+    
 
     const obtenerUbicacion = async () => {
         console.log('entrarar')
@@ -248,9 +258,16 @@ function Navigation(props){
                             },
                             headerLeft: () => (
                                 <TouchableOpacity onPress={cerrar}>
-                                  <Text style={{ color: 'red' }}>{'Cerrar'}</Text>
+                                  <Text style={{ color: 'white' }}>{'Cerrar'}</Text>
                                 </TouchableOpacity>
                             ),
+                            headerRight: () => (
+
+                                <View style={{ flexDirection: 'row' }}>
+                                  <HeaderButton title="Boton1" onPress={() => handleButtonPress()} dropdownVisible={isDropdownVisible} primerColor={primerColor} segundoColor={segundoColor} />
+                                </View>
+                            )
+                            
                             
                         }}
     
@@ -381,6 +398,25 @@ function Navigation(props){
                         options={{ headerShown: false, title: 'sadas', headerBackTitleVisible: false }}
     
                     />
+
+                    <Stack.Screen
+                        name="Perfil"
+                        component={Perfil}
+                        initialParams={{ primerColor: primerColor }}
+                        options={{
+                        headerShown: true,
+                        tabBarVisible: false,
+                        tabBarIcon: ({ focused }) => (
+                            <View style={{ alignItems: 'center', justifyContent: 'center', top: 0, width: width / 4, marginBottom: 0, backgroundColor: primerColor, height: '100%' }}>
+                            <FontAwesome5 name="user" size={25} color="#3498db" />
+                            {focused ?
+                                <Text style={{ color: segundoColor, fontSize: 12, fontFamily: 'Poppins-Light' }}>Perfil</Text>
+                                : <Text style={{ color: colorLetra, fontSize: 12, paddingBottom: 1, fontFamily: 'Poppins-Light' }}>Perfil</Text>}
+                            </View>
+                        )
+                        }}
+                    />
+
     
                 </Stack.Navigator>
     
@@ -397,3 +433,4 @@ function Navigation(props){
 }
 
 export default Navigation
+

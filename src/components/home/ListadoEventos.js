@@ -6,14 +6,15 @@ import {
     Dimensions,
     FlatList,
     StyleSheet,
-    BackHandler
+    BackHandler,
+    Modal
 } from 'react-native';
 import { Image, Divider } from '@rneui/themed';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation } from '@react-navigation/native';
 import { HttpPost, HttpGet, HttpPatch } from '../../utils/httpApi';
 import {url} from '../../utils/url'
-
+import HeaderButton from '../../navigation/HeaderButton';
 
 var { height, width } = Dimensions.get('window');
 
@@ -24,16 +25,18 @@ const porcentaje = (porcentaje) => {
 };
 
 
+
+
 function ListadoEventos(props) {
 
     const {navigation} = props
     const { primerColor, segundoColor, region } = props.route.params
     const navigationRetrocede = useNavigation();
 
-    const [confirmaPedido, setconfirmaPedido] = useState(false);
+    const [confirmaPedido, setconfirmaPedido] = useState(true);
     const urlApi = url()
     const [errorApi, seterrorApi] = useState(false);
-    const [conductorLocation, setconductorLocation] = useState(true);
+    const [conductorLocation, setconductorLocation] = useState(null);
     const [finalizaEntrega, setfinalizaEntrega] = useState(false);
 
 
@@ -50,6 +53,7 @@ function ListadoEventos(props) {
 
     ]);
 
+
     useEffect(() => {
 
         /*const backHandler = BackHandler.addEventListener(
@@ -57,6 +61,10 @@ function ListadoEventos(props) {
             handleHardwareBack
           );
           return () => backHandler.remove();*/
+
+          obtenerUbicacionCliente()
+
+      
         
       }, []);   
 
@@ -65,8 +73,15 @@ function ListadoEventos(props) {
     };
 
     const aceptarSolicitud = () =>{
-        navigation.navigate('MainMenuConductor', {finalizaEntrega: finalizaEntrega, conductorLocation: conductorLocation})
+        navigation.navigate('MainMenuConductor', {confirmaPedido: confirmaPedido, conductorLocation: conductorLocation, cambiaEstadoEntrega: terminaEntregaMapa()})
     } 
+
+    
+    const terminaEntregaMapa = () => {
+        console.log("recibe señal conduc")
+        setconfirmaPedido(false)
+
+    };
 
 
 
@@ -143,13 +158,10 @@ function ListadoEventos(props) {
     }
 
 
-
-
-
     const itemEvento = ({ item }) => {
         
         return (
-            <View style={{}}>
+            <TouchableOpacity onPress={aceptarSolicitud} style={{}}>
                 <View 
                     style={{ width: '100%', height: porcentaje(22), flexDirection: 'row', borderRadius: 10, backgroundColor: '#E1E1E1'}}>
 
@@ -180,16 +192,16 @@ function ListadoEventos(props) {
                         <Text style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins-Light', textAlign: 'center' }}>{item.zona}</Text>
 
                     </View>
-                    <TouchableOpacity onPress={aceptarSolicitud} style={{ width: porcentaje(30), height: porcentaje(25), justifyContent: 'center' }}>
+                    <View style={{ width: porcentaje(30), height: porcentaje(25), justifyContent: 'center' }}>
 
                         <FontAwesome5 name="check" size={20} color="#3498db" style={{textAlign: 'center'}} />
-                    </TouchableOpacity>
+                    </View>
                    
 
                 </View>
                 <Divider style={styles.divider} />
 
-            </View>
+            </TouchableOpacity>
 
 
         )
@@ -199,6 +211,8 @@ function ListadoEventos(props) {
     return (
 
         <View style={{ width: '100%' }}>
+
+
             <View style={{flexDirection: 'row'}}>
                 <Text style={styles.colorCabecera}>
                     Cliente
@@ -261,3 +275,4 @@ const styles = StyleSheet.create({
 })
 
 export default ListadoEventos;
+

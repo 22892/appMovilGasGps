@@ -37,6 +37,7 @@ function Mapa(props){
   useEffect(() => {
     
     console.log("cunatas veces ingresa")
+    console.log(confirmaPedido)
     
     if(tipo == 1){ // CLIENTE
       
@@ -59,11 +60,25 @@ function Mapa(props){
 
     
     if(tipo == 2){ // TIPO CONDUCTOR
-      const newUserLocation = {
-        latitude: -2.901267 , 
-        longitude: -79.013714,
-      };
-      setUserLocation(newUserLocation);   
+
+      console.log("locaton")
+      console.log(conductorLocation)
+
+      if(confirmaPedido){
+
+
+        const { latitude, longitude } = conductorLocation
+        const latitudDouble = parseFloat(latitude);
+        const longitudDouble = parseFloat(longitude);
+
+        const newUserLocation = {
+          latitude: -2.901267 , 
+          longitude: -79.013714,
+        };
+        setUserLocation(newUserLocation);  
+      }
+
+      
   
     }
 
@@ -228,3 +243,4 @@ function Mapa(props){
 }
 
 export default Mapa
+

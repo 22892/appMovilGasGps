@@ -95,7 +95,7 @@ function Solicitar(props) {
     };
 
 
-    const obtenerUbicacionCliente = async () =>{
+    const obtenerUbicacionConductor = async () =>{
 
 
         let headers = {
@@ -170,6 +170,11 @@ function Solicitar(props) {
     }
 
 
+
+
+    const obtenerUbicacionConductoresConectados = async () =>{
+
+    }
     
 
  
@@ -181,7 +186,7 @@ function Solicitar(props) {
 
     const aceptarPedido = useCallback(() => {
         
-        obtenerUbicacionCliente()
+        obtenerUbicacionConductor()
 
     }, []);
     
@@ -390,3 +395,4 @@ const styles = StyleSheet.create({
 })
 
 export default Solicitar
+

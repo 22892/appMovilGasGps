@@ -1,5 +1,8 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import FastImage from 'react-native-fast-image';
+
 
 var { height, width } = Dimensions.get('window');
 
@@ -14,46 +17,121 @@ const porcentajeHeigt = (por) => {
 
 function Perfil(props) {
 
-  const {primerColor, segundoColor} = props.route.params
+  const {primerColor, segundoColor, regresaPerfil} = props.route.params
+  const [txtNombre, setNombre] = useState("")
+  const [txtApellido, setApellido] = useState("")
+  const [txtUsuario, setUsuario] = useState("")
+
 
   const iniciarSession = () =>{
 
   }
 
+  useEffect(() => {
+      
+
+  }, []); 
+
+  useFocusEffect(() => {
+    console.log('La pantalla se volvió a enfocar');
+    // Puedes realizar acciones adicionales cuando la pantalla se vuelve a enfocar
+    return () => {
+      console.log('La pantalla se desenfocó');
+      // Puedes realizar acciones adicionales cuando la pantalla se desenfoca
+      regresaPerfil()
+    };
+  });
+
+  const updateUser = () =>{
+    
+  }
+
+
   return(
-    <SafeAreaView style={{ backgroundColor: 'white', height: '100%', width: '100%'}}>
+    <SafeAreaView style={{ backgroundColor: '#E1E1E1', height: '100%', width: '100%'}}>
 
       <View style={{ backgroundColor: primerColor, justifyContent: 'center', alignItems: 'center', height: porcentajeHeigt(27), borderBottomEndRadius: 20, borderBottomStartRadius: 20 }}>
 
-        <View style={{ flexDirection: 'row', height: porcentaje(15), marginTop: '10%' }}>
-          <Text style={{ color: 'white', textAlign: 'center', fontSize: 40 }}> BIENVENIDO</Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => iniciarSession()}
-          style={{ width: '80%', backgroundColor: segundoColor, marginTop: '4%', borderRadius: 20, paddingVertical: '4%', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white', fontSize: 14, fontFamily: 'Poppins-Light', textAlign: 'center' }}>INICIAR SESIÓN</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center'}}>
-
-        <TouchableOpacity
-            onPress={() => iniciarSession()}
-            style={{ width: '85%', backgroundColor: primerColor, marginTop: '4%', borderRadius: 20, paddingVertical: '4%', justifyContent: 'center', alignItems: 'center', marginBottom: '5%' }}>
-            <Text style={{ color: 'white', fontSize: 18, fontFamily: 'Poppins-Light', textAlign: 'center' }}>SOLICITAR GAS</Text>
-        </TouchableOpacity>
-
-        <View style={{height: porcentajeHeigt(7), backgroundColor: primerColor, width: '100%'}}>
-          <Text style={{color: 'white', textAlign: 'center', fontSize: 18}}>Registrate para más </Text>
-          <Text style={{color: 'white', textAlign: 'center', fontSize: 18}}>beneficios</Text>
+        <View style={{ width: '30%', alignItems: 'center', backgroundColor: 'white', padding: '5%', borderRadius: porcentaje(20) }}>
+          <FastImage
+            source={require('../../assets/imagenes/avatar.png')}
+            style={{ width: porcentaje(70), height: porcentaje(20) }}
+            resizeMode="contain"
+          />
         </View>
 
       </View>
+
+      <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', marginTop: '15%' }}>
+                        <TextInput
+                            style={styles.input}
+                            onChangeText={setNombre}
+                            value={txtNombre}
+                            placeholder="Pedro Jose"
+                            placeholderTextColor= {segundoColor}
+                            borderColor="white"
+                            borderRadius={30}
+                        />
+                        
+        </View>
+
+        <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
+                        <TextInput
+                            style={styles.input}
+                            onChangeText={setApellido}
+                            value={txtApellido}
+                            placeholder="Alvarez Carpio"
+                            placeholderTextColor= {segundoColor}
+                            borderColor="white"
+                            borderRadius={30}
+                        />
+                        
+        </View>
+       
+        <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
+                        <TextInput
+                            style={styles.input}
+                            onChangeText={setUsuario}
+                            value={txtUsuario}
+                            placeholder="pedro123"
+                            placeholderTextColor= {segundoColor}
+                            borderColor="white"
+                            borderRadius={30}
+                        />
+                        
+        </View>
+
+        <View style={{flex: 1, alignItems: 'center',justifyContent: 'flex-end', padding: 10}}>
+
+          <TouchableOpacity
+            onPress={() => updateUser()}
+            style={{ width: '80%', backgroundColor: primerColor, borderRadius: 20, paddingVertical: '4%' }}>
+            <Text style={{ color: 'white', fontSize: 18, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>Actualizar Datos</Text>
+          </TouchableOpacity>
+
+        </View>
+
+      
 
     </SafeAreaView>
   )
 }
+
+
+
+const styles = StyleSheet.create({
+  input: {
+      height: 50,
+      margin: 12,
+      borderWidth: 1,
+      padding: 10,
+      backgroundColor: 'white',
+      width: '90%',
+      color: 'black',
+      fontSize: 12, 
+      fontFamily: 'Poppins-Light'
+     
+  },
+});
 
 export default Perfil

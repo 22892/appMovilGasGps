@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import { useRoute } from '@react-navigation/native';
 import { View, Text, Dimensions, TouchableOpacity} from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -16,17 +16,29 @@ export default function MainMenuConductor(props){
 
     const { route } = useRoute();
     const {navigation} = props
-    const { primerColor, segundoColor, region } = props.route.params
+    const { primerColor, segundoColor, region, confirmaPedido, conductorLocation, cambiaEstadoEntrega } = props.route.params
     const [colorLetra, setcolorLetra] = useState("#FFFFFF")
-    
+    const [finalizaEntrega, setfinalizaEntrega] = useState(false);
+    const [confirmaPedido2, setconfirmaPedido] = useState(confirmaPedido);
 
-    //const finalizaEntrega = route.params?.finalizaEntrega;
-    //const conductorLocation = route.params?.conductorLocation;
+    
+    useEffect(() => {
+
+    }, []);   
+ 
 
     const verSolicitudes = () =>{
         console.log("cerar sesion")
         navigation.navigate("ListadoEventos")
     }
+
+    
+    const terminaEntregaMapa = () => {
+        console.log("recibe señal main menu")
+        setfinalizaEntrega(true)
+        setconfirmaPedido(false)
+        
+    };
 
     return(
         <Tab.Navigator
@@ -65,40 +77,37 @@ export default function MainMenuConductor(props){
                         
                         <View style={{flexDirection: 'row'}}>
                             
-                            <TouchableOpacity onPress={verSolicitudes}>
-                                <Text style={{marginRight: 16, color: 'white'}}>
-                                    Ver Solicitudes
-                                </Text>
+                            {finalizaEntrega == false ? (
+                                <View onPress={verSolicitudes}>
+                                    <Text style={{marginRight: 16, color: 'blue'}}>
+                                       REALIZANDO ENTREGA
+                                    </Text>
 
-                            </TouchableOpacity>
+                                </View>
+
+                            ):(
+
+                                <TouchableOpacity onPress={verSolicitudes}>
+                                    <Text style={{marginRight: 16, color: 'white'}}>
+                                        Ver Solicitudes
+                                    </Text>
+
+                                </TouchableOpacity>
+
+                            )}
+
 
                         </View>
                     </View>
                 )
                 }}
             >
-                {() => <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={2} />}
+                {() => <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={2} confirmaPedido={confirmaPedido2} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} />}
              </Tab.Screen>
-             <Tab.Screen
-                name="Perfil"
-                component={Perfil}
-                initialParams={{ primerColor: primerColor }}
-                options={{
-                headerShown: false,
-                tabBarVisible: false,
-                tabBarIcon: ({ focused }) => (
-                    <View style={{ alignItems: 'center', justifyContent: 'center', top: 0, width: width / 4, marginBottom: 0, backgroundColor: primerColor, height: '100%' }}>
-                    <FontAwesome5 name="user" size={25} color="#3498db" />
-                    {focused ?
-                        <Text style={{ color: segundoColor, fontSize: 12, fontFamily: 'Poppins-Light' }}>Perfil</Text>
-                        : <Text style={{ color: colorLetra, fontSize: 12, paddingBottom: 1, fontFamily: 'Poppins-Light' }}>Perfil</Text>}
-                    </View>
-                )
-                }}
-            />
         </Tab.Navigator>
 
     )
 }
+
 
 

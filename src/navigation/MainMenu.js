@@ -17,9 +17,8 @@ export default function MainMenu(props){
     const { primerColor, segundoColor, region } = props.route.params
     const [colorLetra, setcolorLetra] = useState("#FFFFFF")
 
-    function renderMapa() {
-        return <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={1} />;
-    }
+    
+
 
     return(
         <Tab.Navigator
@@ -122,5 +121,3 @@ export default function MainMenu(props){
 
     )
 }
-
-
