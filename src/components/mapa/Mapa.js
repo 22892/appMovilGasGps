@@ -1,8 +1,11 @@
 import React, {useState, useEffect, useRef} from 'react'
-import { View, Text, Image} from 'react-native'
+import { View, Text, Image, Button, StyleSheet, TouchableOpacity} from 'react-native'
 import Loading from '../../utils/Loading';
 import MapView, {Marker} from 'react-native-maps'
 import MapViewDirections from 'react-native-maps-directions';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { HttpPost, HttpGet, HttpPatch, HttpPostSinBody } from '../../utils/httpApi';
+import {url} from '../../utils/url'
 
 
 function Mapa(props){
@@ -17,6 +20,8 @@ function Mapa(props){
   const [objectLocation, setObjectLocation] = useState(null);
   const mapViewRef = useRef(null);
   const [duration, setDuration] = useState(null);
+  const [ltsConducotresConexion, setltsConducotresConexion] = useState([])
+  const urlApi = url()
 
 
 
@@ -35,6 +40,8 @@ function Mapa(props){
 
 
   useEffect(() => {
+
+
     
     console.log("cunatas veces ingresa")
     console.log(confirmaPedido)
@@ -42,6 +49,9 @@ function Mapa(props){
     if(tipo == 1){ // CLIENTE
       
       if(confirmaPedido){
+
+        obtenerUbicacionConductoresConectados()
+
        
         const { latitude, longitude } = conductorLocation
         const latitudDouble = parseFloat(latitude);
@@ -87,6 +97,47 @@ function Mapa(props){
 
 
 
+  const centerMapOnMarker = () => {
+    if (mapViewRef.current) {
+      mapViewRef.current.animateToRegion({
+        latitude: region.latitude,
+        longitude: region.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  };
+
+
+  const obtenerUbicacionConductoresConectados = async () =>{
+
+    let headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+    }
+
+    await HttpPostSinBody(urlApi + 'listar_posiciones/', headers,  5000).then(async ([data, status]) => {
+       
+       
+        if(status == 200){
+
+          console.log(JSON.stringify(data));
+          setltsConducotresConexion(data)
+            
+        }
+      
+
+    }).catch((error) => {
+        
+        console.log("error obterr puntos")
+        seterrorApi(true)
+        
+    })
+
+
+  }
+
+
   return(
 
     <>
@@ -98,12 +149,15 @@ function Mapa(props){
         <MapView
           style={{ flex: 1 }}
           ref={mapViewRef}
+          showsMyLocationButton={true}
           initialRegion={{
             latitude: region ? region.latitude : 0,
             longitude: region ? region.longitude : 0,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
+          zoomControlEnabled={true}
+         
         >
 
         {region && (
@@ -154,13 +208,25 @@ function Mapa(props){
             }}
           />
         )}
+
+        
+        
+       
+
         </MapView>
+        <TouchableOpacity style={styles.button} onPress={centerMapOnMarker}>
+            <FontAwesome5 name="plus" size={25} color="white" />
+        </TouchableOpacity>
+
 
         {duration && (
           <View style={{ position: 'absolute', bottom: 20, alignSelf: 'center', backgroundColor: 'white', padding: 10, borderRadius: 10 }}>
             <Text style={{color: 'black'}}>Tiempo estimado: {duration.toFixed(2)} minutos</Text>
           </View>
         )}
+
+        
+       
 
         </View>
 
@@ -173,12 +239,15 @@ function Mapa(props){
           <MapView
             style={{ flex: 1 }}
             ref={mapViewRef}
+            showsMyLocationButton={true}
             initialRegion={{
               latitude: region ? region.latitude : 0,
               longitude: region ? region.longitude : 0,
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0421,
             }}
+            zoomControlEnabled={true}
+           
           >
 
           {region && (
@@ -186,7 +255,9 @@ function Mapa(props){
           )}
 
           </MapView>
-
+          <TouchableOpacity style={styles.button} onPress={centerMapOnMarker}>
+            <FontAwesome5 name="plus" size={25} color="white" />
+          </TouchableOpacity>
         </View>
           
       ) }
@@ -195,7 +266,6 @@ function Mapa(props){
     </>
     
     
-
 
 
 
@@ -241,6 +311,21 @@ function Mapa(props){
   }
 
 }
+
+
+const styles = StyleSheet.create({
+  button: {
+    position: 'absolute',
+    top: 380,
+    right: 10,
+    backgroundColor: '#CDCDCD',
+    padding: 10,
+    borderRadius: 25,
+  },
+  buttonText: {
+    color: 'white',
+  },
+});
 
 export default Mapa
 

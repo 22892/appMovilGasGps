@@ -52,6 +52,11 @@ const HttpPost = (url, headers, formData, timeout) => {
     return _fetch(fetchPromise('POST', url, headers, formData), timeout);
 };
 
+const HttpPostSinBody = (url, headers, timeout) => {
+    return _fetch(fetchPromise('POST', url, headers), timeout);
+};
+
+
 const HttpPatch = (url, headers, formData, timeout) => {
     return _fetch(fetchPromise('PATCH', url, headers, formData), timeout);
 };
@@ -60,4 +65,4 @@ const HttpGet = (url, headers, timeout) => {
     return _fetch(fetchPromise('Get', url, headers), timeout);
 };
 
-export { HttpPost, HttpGet, HttpPatch }
+export { HttpPost, HttpGet, HttpPatch, HttpPostSinBody }

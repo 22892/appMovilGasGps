@@ -8,7 +8,10 @@ import {
     StatusBar,
     Modal,
     StyleSheet,
-    SafeAreaView
+    SafeAreaView,
+    AsyncStorage,
+    TextInput,
+    Button
   } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -19,7 +22,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Loading from '../../utils/Loading';
 import ModalVentana from './ModalVentana';
 import Mapa from '../mapa/Mapa';
-import { HttpPost, HttpGet, HttpPatch } from '../../utils/httpApi';
+import { HttpPost, HttpGet, HttpPatch, HttpPostSinBody } from '../../utils/httpApi';
 import {url} from '../../utils/url'
 
 
@@ -48,11 +51,20 @@ function Solicitar(props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const sheetRef = useRef(null)
-    const snapPoints = ["60%"]
+    const snapPoints = ["83%"]
     const urlApi = url()
     const [errorApi, seterrorApi] = useState(false);
     const [conductorLocation, setconductorLocation] = useState(null);
     const [finalizaEntrega, setfinalizaEntrega] = useState(false);
+    const [number, setNumber] = useState(0);
+    const [isVisibleLoading, setisVisibleLoading] = useState(false);
+
+
+    const [txtNombre, setNombre] = useState("")
+    const [txtApellido, setApellido] = useState("")
+    const [txtTelefono, setTelefono] = useState("")
+    const [txtCedula, setCedula] = useState("")
+    
 
 
     const handleSheetChanges = useCallback((index: number) => {
@@ -97,6 +109,7 @@ function Solicitar(props) {
 
     const obtenerUbicacionConductor = async () =>{
 
+        setisVisibleLoading(true)
 
         let headers = {
             Accept: 'application/json',
@@ -153,6 +166,7 @@ function Solicitar(props) {
                 setconfirmaPedido(true)
                 sheetRef.current?.close();
                 setIsOpen(false)   
+                setisVisibleLoading(false)
         
             }
 
@@ -162,6 +176,8 @@ function Solicitar(props) {
             
             console.log("error obterr puntos")
             seterrorApi(true)
+            setconfirmaPedido(false)
+            setisVisibleLoading(false)
         })
 
 
@@ -172,9 +188,7 @@ function Solicitar(props) {
 
 
 
-    const obtenerUbicacionConductoresConectados = async () =>{
 
-    }
     
 
  
@@ -202,8 +216,24 @@ function Solicitar(props) {
 
 
     };
+
+    const handleTextChange = (text) => {
+        // Validar que el texto sea un número antes de actualizar el estado
+        const parsedNumber = parseFloat(text);
+        if (!isNaN(parsedNumber)) {
+          setNumber(parsedNumber);
+        }
+    };
     
 
+    const incrementNumber = () => {
+        setNumber(number + 1);
+      };
+    
+    const decrementNumber = () => {
+        setNumber(Math.max(0, number - 1));
+    };
+    
  
     return(
 
@@ -232,8 +262,13 @@ function Solicitar(props) {
                 </View>
             )}
 
+            
+
 
             <SafeAreaView style={{ backgroundColor: 'white', height: '100%', width: '100%'}}>
+
+                <Loading text="Buscrado Conducto....." isVisible={isVisibleLoading} color={segundoColor} />
+
 
                 <View style={{ backgroundColor: primerColor, justifyContent: 'center', alignItems: 'center', height: porcentajeHeigt(17), borderBottomEndRadius: 20, borderBottomStartRadius: 20 }}>
 
@@ -263,19 +298,107 @@ function Solicitar(props) {
                                 <View style={{marginLeft: 10, margin: '5%'}}>
                                     <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
                                     
-                                        <Text style={{color: segundoColor, fontWeight: 900}}>CONFIRMA TU PEDIDO!!!</Text>
+                                        <Text style={{color: primerColor, fontWeight: 900}}>CONFIRMA TU PEDIDO!!!</Text>
 
                                     </View>
 
-                                    <View style={{marginTop: '5%'}}>
-                                        <Text style={{color: 'black', fontWeight: 800}}> Dirección Destino: </Text>
-                                        <Text style={{color: 'black'}}> {direccion ? `En: ${direccion}` : 'Cargando dirección...'}  </Text>
+                                    <View style={{marginTop: '0%'}}>
 
-                                        <Text style={{color: 'black', fontWeight: 800, marginTop: '5%'}}> Código de Pedido: </Text>
-                                        <Text style={{color: 'black'}}> HGDBHSS678  </Text>
+                                        <View style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}>
 
-                                        <Text style={{color: 'black', fontWeight: 800, marginTop: '5%'}}> Seleccione Número de Cilindros: </Text>
-                                        <Text style={{color: 'black'}}> 2  </Text>
+
+                                            <View style={{ width: '100%', marginTop: '2%', flexDirection: 'row', alignItems: 'center'}}>
+                                                <TextInput
+                                                    style={styles.inputRegistro}
+                                                    onChangeText={setNombre}
+                                                    value={txtNombre}
+                                                    placeholder="Nombre"
+                                                    placeholderTextColor= "white"
+                                                    borderColor="white"
+                                                    borderRadius={30}
+                                                />
+                                                
+                                            </View>
+
+                                            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
+                                                <TextInput
+                                                    style={styles.inputRegistro}
+                                                    onChangeText={setApellido}
+                                                    value={txtApellido}
+                                                    placeholder="Apellido"
+                                                    placeholderTextColor= "white"
+                                                    borderColor="white"
+                                                    borderRadius={30}
+                                                />
+                                                
+                                            </View>
+
+                                            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
+                                                <TextInput
+                                                    style={styles.inputRegistro}
+                                                    onChangeText={setTelefono}
+                                                    value={txtTelefono}
+                                                    keyboardType="numeric"
+                                                    placeholder="Telefono"
+                                                    placeholderTextColor= "white"
+                                                    borderColor="white"
+                                                    borderRadius={30}
+                                                />
+                                                
+                                            </View>
+
+                                            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
+                                                <TextInput
+                                                    style={styles.inputRegistro}
+                                                    onChangeText={setCedula}
+                                                    keyboardType="numeric"
+                                                    value={txtCedula}
+                                                    placeholder="Cédula"
+                                                    placeholderTextColor= "white"
+                                                    borderColor="white"
+                                                    borderRadius={30}
+                                                />
+                                                
+                                            </View>
+                                        </View>
+
+                                        <View style={{marginLeft: '2%'}}>
+
+                                            <Text style={{color: 'black', fontWeight: 800}}> Dirección Destino: </Text>
+                                            <Text style={{color: 'black'}}> {direccion ? `En: ${direccion}` : 'Cargando dirección...'}  </Text>
+
+                                            <Text style={{color: 'black', fontWeight: 800, marginTop: '5%'}}> Código de Pedido: </Text>
+                                            <Text style={{color: 'black'}}> HGDBHSS678  </Text>
+
+                                            <Text style={{color: 'black', fontWeight: 800, marginTop: '5%'}}> Seleccione Número de Cilindros: </Text>
+                                            <View style={styles.container}>
+                                        
+                                                <View style={styles.buttonContainer}>
+
+                                                    <TextInput
+                                                        style={styles.input}
+                                                        keyboardType="numeric"
+                                                        placeholder="Ingrese un número"
+                                                        value={number.toString()}
+                                                        onChangeText={handleTextChange}
+                                                        placeholderTextColor={primerColor}
+                                                        borderRadius={30}
+                                                    />
+                                                    <TouchableOpacity style={{backgroundColor: primerColor, padding: 5, height: '72%', marginLeft: '5%', marginRight: '2%'}} onPress={incrementNumber}>
+                                                        <FontAwesome5 name="plus" size={25} color="#D8D8D8" />
+
+                                                    </TouchableOpacity >
+
+                                                    <TouchableOpacity style={{backgroundColor: primerColor, padding: 5, height: '72%'}} onPress={decrementNumber}>
+                                                        <FontAwesome5 name="minus" size={25} color="#D8D8D8" />
+                                                    </TouchableOpacity>
+                                                    
+                                                </View>
+                                            </View>
+
+
+                                        </View>
+
                                         
                                     </View>
 
@@ -391,6 +514,34 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         
+    },
+    container: {
+        padding: 16,
+    },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingLeft: 8,
+        color: 'black',
+        width: '70%'
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        
+    },
+    inputRegistro: {
+        height: 40,
+        margin: 5,
+        borderWidth: 1,
+        padding: 10,
+        backgroundColor: '#E5E5E5',
+        width: '100%',
+        color: 'black',
+        fontSize: 12, 
+        fontFamily: 'Poppins-Light'
+       
     },
 })
 
