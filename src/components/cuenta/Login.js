@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useContext } from 'react';
 
 import {
     View,
@@ -10,12 +10,14 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Keyboard,
-    AsyncStorage,
     TextInput
 } from 'react-native';
 import { Input } from '@rneui/themed';
 import FastImage from 'react-native-fast-image';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { AuthContext } from '../../utils/context';
+import Loading from '../../utils/Loading';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 var { height, width } = Dimensions.get('window');
@@ -29,33 +31,64 @@ const porcentajeHeigt = (por) => {
 };
 
 
-import Loading from '../../utils/Loading';
-
-
 function Login(props){
 
     const {navigation} = props
     const { primerColor, segundoColor } = props.route.params
-    const [login, setlogin] = useState({
-        correo: "",
-        contrasena: "",
-
-    });
+   
     const [isVisibleLoading, setisVisibleLoading] = useState(false);
-    const [erroCorreo, seterroCorreo] = useState("");
-    const [erroPass, seterroPass] = useState("");
+    const [isValidacionCedula, setisValidacionCedula] = useState(false);
+    const [isValidacionContrasena, setisValidacionContrasena] = useState(false);
+    const [mensajeError, setmensajeError] = useState("");
+    
     const [loginErrorSession, setloginErrorSession] = useState(false);
-    const txtCorreo = useRef()
-    const txtContrasena = useRef()
 
-    const [txtNombre, setNombre] = useState("")
-    const [txtPass, setPass] = useState("")
+    const txtRefCedula = useRef()
+    const txtRefContrasena = useRef()
+    const [login, setlogin] = useState({
+        cedula: "",
+        contrasena: "",
+        tipoPersona: 2
+    });
+   
     const [showPassword, setShowPassword] = useState(false);
 
+    
 
-    const loginPress = () => {
+    const loginPress = async () => {
 
-        navigation.navigate('ListadoEventos')
+       
+
+        setisVisibleLoading(true)
+
+        if (login.cedula == "" || login.cedula.length < 10) {
+            setisVisibleLoading(false)
+            setmensajeError("Cédula Incorecta")
+            setloginErrorSession(true)
+        }else if(login.contrasena == "" || login.contrasena.length < 6){
+            setisVisibleLoading(false)
+            setmensajeError("Contraseña Minimo 6 caracteres")
+            setloginErrorSession(true)
+        }else{
+
+            try {
+                console.log("lllegagagga")
+                setloginErrorSession(false)
+                await AsyncStorage.setItem('persona', JSON.stringify({
+                  persona: login,
+                }));
+                setisVisibleLoading(false)
+                navigation.navigate('ListadoEventos',{dataPerson: login})
+
+              } catch (error) {
+                setmensajeError("Usuario o Contraseña Incorrectos!!!")
+                setloginErrorSession(true)
+                // Hubo un error al intentar almacenar los datos
+                console.error("Error al almacenar en AsyncStorage:", error);
+              }
+          
+
+        }
 
     }
 
@@ -73,12 +106,13 @@ function Login(props){
               <View
 
                   style={{ width: '80%', backgroundColor: "#ECDDDE", marginTop: '10%', paddingVertical: '2%' }}>
-                  <Text style={{ color: "red", fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>Error de autenticación</Text>
+                  <Text style={{ color: "red", fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>{mensajeError}</Text>
               </View>
           )
 
       }
     }
+
 
 
 
@@ -104,7 +138,7 @@ function Login(props){
                     </View>
 
                     <View style={{ width: '100%', textAlign: 'center', alignItems: 'center', marginTop: '8%' }}>
-                    <Text style={{ color: primerColor, fontSize: 40, fontWeight: '900' }}>RAPIDA</Text>
+                    <Text style={{ color: primerColor, fontSize: 40, fontWeight: '900' }}>RAPIGAS</Text>
                     </View>
 
                     <View>
@@ -134,12 +168,17 @@ function Login(props){
                             <View style={{ width: '90%', marginTop: '10%', flexDirection: 'row', alignItems: 'center'}}>
                                 <TextInput
                                     style={styles.input}
-                                    onChangeText={setNombre}
-                                    value={txtNombre}
-                                    placeholder="Email"
+                                    onChangeText={value => {
+                                        setlogin((login) => {
+                                            return { ...login, cedula: value };
+                                        });
+                                    }}
+                                    placeholder="Cédula"
                                     placeholderTextColor= "#9C9C9C"
                                     borderColor="white"
                                     borderRadius={30}
+                                    keyboardType="numeric"
+                                    ref={txtRefCedula}
                                 />
                                 
                             </View>
@@ -147,12 +186,19 @@ function Login(props){
                             <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', }}>
                                 <TextInput
                                     style={styles.input}
-                                    onChangeText={setPass}
-                                    value={txtPass}
+                                    onChangeText={value => {
+                                        setlogin((login) => {
+                                            return { ...login, contrasena: value };
+                                        });
+                                    }}
                                     placeholder="Contraseña"
                                     placeholderTextColor= "#9C9C9C"
                                     borderColor="white"
                                     borderRadius={30}
+                                    ref={txtRefContrasena}
+                                    onSubmitEditing={() => {
+                                        Keyboard.dismiss()
+                                    }}
                                     secureTextEntry={!showPassword}
                                 />
                                 <TouchableOpacity
@@ -166,10 +212,13 @@ function Login(props){
 
 
                             <TouchableOpacity
-                        onPress={() => loginPress()}
-                        style={{ width: '80%', backgroundColor: primerColor, marginTop: '8%', borderRadius: 20, paddingVertical: '4%' }}>
-                        <Text style={{ color: 'white', fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>LOGIN</Text>
-                    </TouchableOpacity>
+                                onPress={() => loginPress()}
+                                style={{ width: '80%', backgroundColor: primerColor, marginTop: '8%', borderRadius: 20, paddingVertical: '4%' }}>
+                                <Text style={{ color: 'white', fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>LOGIN</Text>
+                            </TouchableOpacity>
+
+                            {loginError(loginErrorSession)}
+
                         </View>
 
 

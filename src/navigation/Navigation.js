@@ -7,6 +7,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
 import {HttpPost} from '../utils/httpApi'
 import {url} from '../utils/url'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 import Home from '../components/home/Home'
@@ -41,8 +42,7 @@ function Navigation(props){
     const screenHeight = Dimensions.get('screen').height;
     const [isLoading, setIsLoading] = useState(true);
     const [error, setisError] = useState(false);
-    const [verificaLogin, setverificaLogin] = useState(false)
-    const [tipoUsuario, settipoUsuario] = useState(1)
+    const [tipoUsuario, settipoUsuario] = useState(0)
     const [isDropdownVisible, setDropdownVisible] = useState(false);    
 
 
@@ -51,7 +51,7 @@ function Navigation(props){
         longitude: 0,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
-      });
+    });
     
 
     const authContext = useMemo(() => {
@@ -77,15 +77,40 @@ function Navigation(props){
 
     useEffect(() => {
 
-        obtenerUbicacion();
+        try {
+            AsyncStorage.getItem('persona').then((data) => {
+              if (data != null) {
+                const login = JSON.parse(data);
+                console.log(login)
+                if(login.persona.tipoPersona == 1){
+                    settipoUsuario(1)
+                }
+                if(login.persona.tipoPersona == 2){
+                  settipoUsuario(2)
+                 
+                }
+              }
+            });
+          } catch (error) {
+            settipoUsuario(0)
+            console.log('erro recuepera user')
+            console.log(error)
+        }
+
+        obtenerUbicacion()
+
         setTimeout(() => {
             setIsLoading(false);
         }, 6000); 
 
     }, []);
 
+
+
     const cerrar = () =>{
+        AsyncStorage.removeItem('persona')
         backAction();
+
     }
 
     const handleButtonPress = () => {
@@ -94,11 +119,9 @@ function Navigation(props){
     };
 
 
-   
-    
-
     const obtenerUbicacion = async () => {
-        console.log('entrarar')
+        console.log('obtiene ubicacion navigation')
+        
         try {
           let permiso;
           if (Platform.OS === 'android') {
@@ -117,17 +140,18 @@ function Navigation(props){
                   maximumAge: 1000,
                 });
               });
+              
               const { latitude, longitude } = position.coords;
+
               setRegion({
                 latitude,
                 longitude,
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
               });
-
-              verificarLogin(latitude,longitude );
               
               console.log(region.latitude)
+
             } catch (error) {
               console.log('entra errr')
               setisError(true)
@@ -143,72 +167,14 @@ function Navigation(props){
         }
     };
     
-
-    const verificarLogin = async (latitude, longitude) =>{
-
-        let headers = {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-        }
-
-
-        var objetoEnviar = {
-            "identificacion": "0106625262",
-            "coordenadas": {
-                "latitude": latitude,
-                "longitude": longitude
-            }
-        }
-
-        console.log("urll")
-        console.log(urlApi+'actualiza_posicion')
-        console.log("objeto")
-        console.log(objetoEnviar)
-
-        await HttpPost(urlApi + 'actualiza_posicion/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
-           
-            if(status == 200){
-
-               
-                if(data.estado == "ok"){
-                    console.log("verifica login")
-                    console.log(data.estado)
-                    setverificaLogin(true)
-                    settipoUsuario(2)
-                }
-        
-            }
-
-        
-        }).catch((error) => {
-            setverificaLogin(false)
-           console.log(error)
-        })
-
-    }
-
-
-
-
     if (isLoading) {
-
-    
-
-            return (
-                <>
-               
+        return (
+            <>
                 <ImageBackground source={require('../assets/imagenes/gps.jpg')} style={{ flex: 1, width: '100%', height: screenHeight, position: 'absolute', top: 0, alignItems: 'center' }}>
-    
                 <StatusBar translucent backgroundColor="transparent" />
                 </ImageBackground>
-    
-                </>
-                
-            );
-    
-
-        
-
+            </>
+        );
     }
 
 
@@ -277,7 +243,7 @@ function Navigation(props){
                     <Stack.Screen
                         name="ScreenLogin"
                         component={ScreenLogin}
-                        initialParams={{ primerColor: primerColor, segundoColor: segundoColor, verificaLogin: verificaLogin, tipoUsuario: tipoUsuario }}
+                        initialParams={{ primerColor: primerColor, segundoColor: segundoColor,  tipoUsuario: tipoUsuario }}
                         options={{ headerShown: false, title: 'sadas', headerBackTitleVisible: false }}
     
                     />

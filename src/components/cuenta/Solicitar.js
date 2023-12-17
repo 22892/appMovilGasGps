@@ -9,14 +9,17 @@ import {
     Modal,
     StyleSheet,
     SafeAreaView,
-    AsyncStorage,
     TextInput,
-    Button
+    Button,
+    KeyboardAvoidingView,
+    Keyboard,
+    BackHandler
   } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 import Loading from '../../utils/Loading';
@@ -39,6 +42,7 @@ import {url} from '../../utils/url'
 
 function Solicitar(props) {
 
+    const {navigation} = props
     const screenHeight = Dimensions.get('screen').height;
     const {primerColor, segundoColor, region} = props.route.params
     const [modalVisible, setModalVisible] = useState(false);
@@ -46,45 +50,145 @@ function Solicitar(props) {
     const [YOUR_GOOGLE_MAPS_API_KEY, setApiKey] = useState("AIzaSyC8nFlMFGcAT3At__bZzkAN2oScMgudn8k");
     const [cargando, setCargando] = useState(false)
     const [confirmaPedido, setconfirmaPedido] = useState(false);
+    const [tipoUsuario, settipoUsuario] = useState(1)
+
 
 
     const [isOpen, setIsOpen] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const sheetRef = useRef(null)
-    const snapPoints = ["83%"]
+    const snapPoints = ["85%"]
     const urlApi = url()
     const [errorApi, seterrorApi] = useState(false);
     const [conductorLocation, setconductorLocation] = useState(null);
     const [finalizaEntrega, setfinalizaEntrega] = useState(false);
     const [number, setNumber] = useState(0);
     const [isVisibleLoading, setisVisibleLoading] = useState(false);
+    const [ltsConducotresConexion, setltsConducotresConexion] = useState([])
+    const [codigoPedido, setcodigoPedido] = useState("")
+    const [mensajeError, setmensajeError] = useState("");
+    const [erroDatosPedido, seterroDatosPedido] = useState(false)
 
-
-    const [txtNombre, setNombre] = useState("")
-    const [txtApellido, setApellido] = useState("")
-    const [txtTelefono, setTelefono] = useState("")
-    const [txtCedula, setCedula] = useState("")
-    
+    const txtNombre = useRef()
+    const txtApellido = useRef()
+    const txtTelefono = useRef()
+    const txtCedula = useRef()
+    const [login, setLogin] = useState({
+        nombre: "",
+        apellido: "",
+        telefono: "",
+        cedula: "",
+        tipoPersona: 1,
+        codigoPedido: "",
+        numeroCilindro: 0
+    });
+    const [datosConductor, setdatosConductor] = useState({
+        nombre: "BERNARDO",
+        apellido: "CUZCO",
+        telefono: "",
+    });
 
 
     const handleSheetChanges = useCallback((index: number) => {
+
+
+        try {
+            AsyncStorage.getItem('persona').then((data) => {
+              if (data != null) {
+               
+                const login = JSON.parse(data);
+               
+                if(login.persona.tipoPersona == 1){
+                  
+                    console.log('recupera persona lciente')
+                    console.log(login.persona.nombre)
+
+                    const datosRecuperado = {
+                        nombre: login.persona.nombre,
+                        apellido: login.persona.apellido,
+                        telefono: login.persona.telefono,
+                        cedula: login.persona.cedula,
+                        tipoPersona: 1,
+                        codigoPedido: "",
+                        numeroCilindro: 0,
+                    };
+
+                    console.log("lleno datos")
+                    console.log(datosRecuperado)
+                    setLogin(datosRecuperado);
+
+            
+                    
+                    /*setLogin((login) => {
+                        return { ...login, nombre: login.persona.nombre };
+                    });*/
+
+                }
+                
+              
+              }
+            });
+          } catch (error) {
+            console.log('erro recuepera user')
+            console.log(error)
+        }
     
         sheetRef.current?.snapToIndex(index)
         setIsOpen(true)
         setfinalizaEntrega(false)
+        generarCodigoPedido()
+
 
     }, []);
 
     useEffect(() => {
-        obtenerDireccion();
-        setIsOpen(true)
 
-        console.log("sissiisisis")
-        console.log(urlApi)
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+        
 
-    }, []); 
+        const fetchData = async () => {
+
+            obtenerDireccion();
+            setIsOpen(true)
+            obtenerUbicacionConductoresConectados()
+            
+    
+            console.log("sissiisisis")
+            console.log(urlApi)
     
 
+        };
+
+        fetchData();
+
+        return () => {
+            backHandler.remove();
+        };
+
+    }, []); 
+
+    const onBackPress = () => {
+       
+        console.log("envia actaualzia")
+        navigation.navigate('ScreenLogin', {tipoUsuario: tipoUsuario})
+        return true;
+    };
+
+    
+
+    const generarCodigoPedido = () =>{
+        const timestamp = new Date().getTime(); 
+        const codigoAleatorio = Math.random().toString(36).substr(2, 5); 
+
+        const codigoUnico = `${timestamp}${codigoAleatorio}`;
+        console.log('codigo')
+        console.log(codigoUnico)
+        setcodigoPedido(codigoUnico)
+        setLogin((login) => {
+            return { ...login, codigoPedido: codigoUnico };
+        });
+        
+    }
 
     const obtenerDireccion = async () => {
         try {
@@ -116,38 +220,18 @@ function Solicitar(props) {
             'Content-Type': 'application/json'
         }
 
+    
         var objetoEnviar = {
 
             "punto_inicial": {
                 "latitude": region.latitude,
                 "longitude": region.longitude
             },
-            "destinos": [
-                {
-                    "id": 37,
-                    "latitude": "-2.8839208303706068",
-                    "longitude": "-78.96712219887928"
-                },
-                {
-                    "id": 38,
-                    "latitude": "-2.887371135042596",
-                    "longitude": "-78.95708000832752"
-                },
-                {
-                    "id": 39,
-                    "latitude": "-2.8966719040980005",
-                    "longitude": "-78.97340929681019"
-                },
-                {
-                    "id": 40,
-                    "latitude": "-2.8876711610407457",
-                    "longitude": "-78.97756135636524"
-                }
-            ]
+            "ruta_punto": 0
         }
 
 
-        await HttpPost(urlApi + 'punto_cercano/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+        await HttpPost(urlApi + 'punto_distribuidor_ruta/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
            
             if(status == 200){
 
@@ -162,7 +246,6 @@ function Solicitar(props) {
                 //console.log(locationConductor)
 
                 setconductorLocation(locationConductor)
-
                 setconfirmaPedido(true)
                 sheetRef.current?.close();
                 setIsOpen(false)   
@@ -187,7 +270,34 @@ function Solicitar(props) {
 
 
 
+    const obtenerUbicacionConductoresConectados = async () =>{
 
+        let headers = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        }
+    
+        await HttpPostSinBody(urlApi + 'listar_posiciones/', headers,  5000).then(async ([data, status]) => {
+           
+           
+            if(status == 200){
+    
+              console.log(JSON.stringify(data));
+              setltsConducotresConexion(data)
+                
+            }
+          
+    
+        }).catch((error) => {
+            
+            console.log("error obterr puntos")
+            seterrorApi(true)
+            
+        })
+    
+    
+    }
+    
 
     
 
@@ -198,11 +308,52 @@ function Solicitar(props) {
         
     }, []);
 
-    const aceptarPedido = useCallback(() => {
-        
-        obtenerUbicacionConductor()
+    const aceptarPedido =  async () => {
 
-    }, []);
+        console.log("leggg")
+        console.log(login)
+        setisVisibleLoading(true)
+
+        if (login.nombre == "" || login.apellido == "" ) {
+            setisVisibleLoading(false)
+            setmensajeError("Nombre o Apellido Vacios")
+            seterroDatosPedido(true)
+        }else if(login.telefono.length < 10){
+            setisVisibleLoading(false)
+            setmensajeError("Telefono Invalido")
+            seterroDatosPedido(true)
+        }else if(login.cedula.length < 10){
+            
+            setisVisibleLoading(false)
+            setmensajeError("Cédula Incorrecta")
+            seterroDatosPedido(true)
+        }else if(number == 0){
+            setisVisibleLoading(false)
+            setmensajeError("Minimo tiene que pedir 1 Cilindro")
+            seterroDatosPedido(true)
+        }else{
+            try {
+
+                console.log("lllegagagga")
+                seterroDatosPedido(false)
+                await AsyncStorage.setItem('persona', JSON.stringify({
+                  persona: login,
+                }));
+                setisVisibleLoading(false)
+                obtenerUbicacionConductor()
+
+              } catch (error) {
+                setmensajeError("Error al realizar Pedido!!!")
+                seterroDatosPedido(true)
+                // Hubo un error al intentar almacenar los datos
+                console.error("Error al almacenar en AsyncStorage:", error);
+              }
+        }
+
+        
+       
+
+    };
     
 
     const realizaEntrega = () =>{
@@ -213,7 +364,7 @@ function Solicitar(props) {
         console.log("recibe señal")
         setconfirmaPedido(false)
         setfinalizaEntrega(true)
-
+        obtenerUbicacionConductoresConectados()
 
     };
 
@@ -221,19 +372,46 @@ function Solicitar(props) {
         // Validar que el texto sea un número antes de actualizar el estado
         const parsedNumber = parseFloat(text);
         if (!isNaN(parsedNumber)) {
-          setNumber(parsedNumber);
+            setNumber(parsedNumber);
+            setLogin((login) => {
+                return { ...login, numeroCilindro: parsedNumber };
+            });
+          
         }
     };
     
 
     const incrementNumber = () => {
         setNumber(number + 1);
+        setLogin((login) => {
+            return { ...login, numeroCilindro: number + 1 };
+        });
+        
       };
     
     const decrementNumber = () => {
         setNumber(Math.max(0, number - 1));
+        setLogin((login) => {
+            return { ...login, numeroCilindro: number - 1 };
+        });
     };
     
+
+
+    const loginError = (flag) => {
+
+        if (flag) {
+            return (
+                <View
+  
+                    style={{ width: '100%', backgroundColor: "#ECDDDE", marginTop: '1%', position: 'absolute', top: 0, padding: 10 }}>
+                    <Text style={{ color: "red", fontSize: 14, fontFamily: 'Poppins-Light', width: '100%', textAlign: 'center' }}>{mensajeError}</Text>
+                </View>
+            )
+        }
+    }
+
+
  
     return(
 
@@ -242,7 +420,7 @@ function Solicitar(props) {
 
             {errorApi == true? (
                 <View>
-                    <ModalVentana isVisible={errorApi} text="Error Server " title="ERROR" primerColor={primerColor} segundoColor={segundoColor}/>
+                    <ModalVentana isVisible={errorApi} text="Error Server Recuperar Conductores " title="ERROR" primerColor={primerColor} segundoColor={segundoColor}/>
                 </View>
 
             ):(
@@ -284,7 +462,7 @@ function Solicitar(props) {
 
                 </View>
 
-                <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={1} confirmaPedido={confirmaPedido} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa}/>
+                <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={1} confirmaPedido={confirmaPedido} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} ltsConducotresConexion={ltsConducotresConexion}/>
 
                 <BottomSheet
                             ref={sheetRef}
@@ -296,11 +474,16 @@ function Solicitar(props) {
                             <BottomSheetView>
 
                                 <View style={{marginLeft: 10, margin: '5%'}}>
-                                    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                                    
-                                        <Text style={{color: primerColor, fontWeight: 900}}>CONFIRMA TU PEDIDO!!!</Text>
+                                    {erroDatosPedido == true ? (
+                                        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: '10%'}}>
+                                            <Text style={{color: primerColor, fontWeight: 900}}>CONFIRMA TU PEDIDO!!!</Text>
+                                        </View>
 
-                                    </View>
+                                    ):(
+                                        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                                            <Text style={{color: primerColor, fontWeight: 900}}>CONFIRMA TU PEDIDO!!!</Text>
+                                        </View>
+                                    )}
 
                                     <View style={{marginTop: '0%'}}>
 
@@ -310,12 +493,22 @@ function Solicitar(props) {
                                             <View style={{ width: '100%', marginTop: '2%', flexDirection: 'row', alignItems: 'center'}}>
                                                 <TextInput
                                                     style={styles.inputRegistro}
-                                                    onChangeText={setNombre}
-                                                    value={txtNombre}
+                                                    onChangeText={value => {
+                                                        console.log("ingreso")
+                                                        console.log(value)
+                                                        setLogin((login) => {
+                                                            return { ...login, nombre: value };
+                                                        });
+                                                    }}
+                                                    value={login.nombre}
                                                     placeholder="Nombre"
                                                     placeholderTextColor= "white"
                                                     borderColor="white"
                                                     borderRadius={30}
+                                                    ref={txtNombre}
+                                                    onSubmitEditing={() => {
+                                                        Keyboard.dismiss()
+                                                    }}
                                                 />
                                                 
                                             </View>
@@ -323,12 +516,20 @@ function Solicitar(props) {
                                             <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
                                                 <TextInput
                                                     style={styles.inputRegistro}
-                                                    onChangeText={setApellido}
-                                                    value={txtApellido}
+                                                    onChangeText={value => {
+                                                        setLogin((login) => {
+                                                            return { ...login, apellido: value };
+                                                        });
+                                                    }}
+                                                    value={login.apellido}
                                                     placeholder="Apellido"
                                                     placeholderTextColor= "white"
                                                     borderColor="white"
                                                     borderRadius={30}
+                                                    ref={txtApellido}
+                                                    onSubmitEditing={() => {
+                                                        Keyboard.dismiss()
+                                                    }}
                                                 />
                                                 
                                             </View>
@@ -336,13 +537,21 @@ function Solicitar(props) {
                                             <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
                                                 <TextInput
                                                     style={styles.inputRegistro}
-                                                    onChangeText={setTelefono}
-                                                    value={txtTelefono}
+                                                    onChangeText={value => {
+                                                        setLogin((login) => {
+                                                            return { ...login, telefono: value };
+                                                        });
+                                                    }}
+                                                    value={login.telefono}
                                                     keyboardType="numeric"
                                                     placeholder="Telefono"
                                                     placeholderTextColor= "white"
                                                     borderColor="white"
                                                     borderRadius={30}
+                                                    ref={txtTelefono}
+                                                    onSubmitEditing={() => {
+                                                        Keyboard.dismiss()
+                                                    }}
                                                 />
                                                 
                                             </View>
@@ -350,13 +559,21 @@ function Solicitar(props) {
                                             <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', }}>
                                                 <TextInput
                                                     style={styles.inputRegistro}
-                                                    onChangeText={setCedula}
+                                                    onChangeText={value => {
+                                                        setLogin((login) => {
+                                                            return { ...login, cedula: value };
+                                                        });
+                                                    }}
+                                                    value={login.cedula}
                                                     keyboardType="numeric"
-                                                    value={txtCedula}
                                                     placeholder="Cédula"
                                                     placeholderTextColor= "white"
                                                     borderColor="white"
                                                     borderRadius={30}
+                                                    ref={txtCedula}
+                                                    onSubmitEditing={() => {
+                                                        Keyboard.dismiss()
+                                                    }}
                                                 />
                                                 
                                             </View>
@@ -368,7 +585,7 @@ function Solicitar(props) {
                                             <Text style={{color: 'black'}}> {direccion ? `En: ${direccion}` : 'Cargando dirección...'}  </Text>
 
                                             <Text style={{color: 'black', fontWeight: 800, marginTop: '5%'}}> Código de Pedido: </Text>
-                                            <Text style={{color: 'black'}}> HGDBHSS678  </Text>
+                                            <Text style={{color: 'black'}}> {codigoPedido}  </Text>
 
                                             <Text style={{color: 'black', fontWeight: 800, marginTop: '5%'}}> Seleccione Número de Cilindros: </Text>
                                             <View style={styles.container}>
@@ -403,7 +620,7 @@ function Solicitar(props) {
                                     </View>
 
                                   
-
+                                        
                                     
                                 </View>
 
@@ -424,6 +641,7 @@ function Solicitar(props) {
                                 </TouchableOpacity>
 
 
+
                                 <TouchableOpacity
                                      style={{
                                         backgroundColor: segundoColor,
@@ -440,12 +658,15 @@ function Solicitar(props) {
 
                                 </View>
 
-
-
+                                {loginError(erroDatosPedido)}      
 
                                
+                               
                             </BottomSheetView>
+                           
                 </BottomSheet>
+
+              
                     
                 {isOpen == true ? (
 

@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react'
 import { View, Text, Image, Button, StyleSheet, TouchableOpacity} from 'react-native'
 import Loading from '../../utils/Loading';
-import MapView, {Marker} from 'react-native-maps'
+import MapView, {Marker, PROVIDER_LEAFLET} from 'react-native-maps'
 import MapViewDirections from 'react-native-maps-directions';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { HttpPost, HttpGet, HttpPatch, HttpPostSinBody } from '../../utils/httpApi';
@@ -11,7 +11,7 @@ import {url} from '../../utils/url'
 function Mapa(props){
 
 
-  const { primerColor, segundoColor, region, tipo, confirmaPedido, conductorLocation, cambiaEstadoEntrega } = props;
+  const { primerColor, segundoColor, region, tipo, confirmaPedido, conductorLocation, cambiaEstadoEntrega, ltsConducotresConexion } = props;
 
   //const { primerColor, segundoColor, region, tipo } = props.route.params
   const [driverLocation, setDriverLocation] = useState(null);
@@ -20,10 +20,23 @@ function Mapa(props){
   const [objectLocation, setObjectLocation] = useState(null);
   const mapViewRef = useRef(null);
   const [duration, setDuration] = useState(null);
-  const [ltsConducotresConexion, setltsConducotresConexion] = useState([])
   const urlApi = url()
 
 
+  const customMapStyle = [
+    {
+      featureType: 'poi',
+      elementType: 'labels',
+      stylers: [{ visibility: 'off' }],
+    },
+    {
+      featureType: 'transit',
+      elementType: 'labels',
+      stylers: [{ visibility: 'off' }],
+    },
+   
+    // Agrega más reglas según las capas que deseas deshabilitar
+  ];
 
   useEffect(() => {
 
@@ -45,13 +58,14 @@ function Mapa(props){
     
     console.log("cunatas veces ingresa")
     console.log(confirmaPedido)
+    console.log(tipo)
     
     if(tipo == 1){ // CLIENTE
       
       if(confirmaPedido){
 
-        obtenerUbicacionConductoresConectados()
-
+        console.log("punrtss")
+        console.log(ltsConducotresConexion)
        
         const { latitude, longitude } = conductorLocation
         const latitudDouble = parseFloat(latitude);
@@ -109,33 +123,6 @@ function Mapa(props){
   };
 
 
-  const obtenerUbicacionConductoresConectados = async () =>{
-
-    let headers = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-    }
-
-    await HttpPostSinBody(urlApi + 'listar_posiciones/', headers,  5000).then(async ([data, status]) => {
-       
-       
-        if(status == 200){
-
-          console.log(JSON.stringify(data));
-          setltsConducotresConexion(data)
-            
-        }
-      
-
-    }).catch((error) => {
-        
-        console.log("error obterr puntos")
-        seterrorApi(true)
-        
-    })
-
-
-  }
 
 
   return(
@@ -150,15 +137,20 @@ function Mapa(props){
           style={{ flex: 1 }}
           ref={mapViewRef}
           showsMyLocationButton={true}
+          customMapStyle={customMapStyle}
           initialRegion={{
             latitude: region ? region.latitude : 0,
             longitude: region ? region.longitude : 0,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
           }}
           zoomControlEnabled={true}
+          provider={PROVIDER_LEAFLET}
+          loadingEnabled={false}
+          
          
         >
+
 
         {region && (
           <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} title="Conductor" />
@@ -180,6 +172,8 @@ function Mapa(props){
           />
 
         )}
+
+      
 
         {userLocation && region && (
           <MapViewDirections
@@ -209,10 +203,7 @@ function Mapa(props){
           />
         )}
 
-        
-        
-       
-
+      
         </MapView>
         <TouchableOpacity style={styles.button} onPress={centerMapOnMarker}>
             <FontAwesome5 name="plus" size={25} color="white" />
@@ -240,19 +231,34 @@ function Mapa(props){
             style={{ flex: 1 }}
             ref={mapViewRef}
             showsMyLocationButton={true}
+            customMapStyle={customMapStyle}
             initialRegion={{
               latitude: region ? region.latitude : 0,
               longitude: region ? region.longitude : 0,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
             }}
             zoomControlEnabled={true}
+            provider={PROVIDER_LEAFLET}
+            loadingEnabled={false}
+           
            
           >
 
           {region && (
             <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} title="Ubicación Actual" />
           )}
+
+
+          {tipo == 1 && ltsConducotresConexion.map((marker, index) => (
+            <Marker
+              key={index}
+              coordinate={{ latitude: parseFloat(marker.coordenadas.latitude), longitude: parseFloat(marker.coordenadas.longitude) }}
+              title={marker.distribuidor}
+              image={require('../../assets/imagenes/camion.png')}
+            />
+          ))}
+
 
           </MapView>
           <TouchableOpacity style={styles.button} onPress={centerMapOnMarker}>
