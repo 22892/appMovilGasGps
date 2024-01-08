@@ -1,5 +1,5 @@
 const url = () => {
-    return "http://143.244.163.54:8000/apis/"
+    return "https://test.uscarsparts.com/apis/"
 };
 
 export { url }

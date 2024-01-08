@@ -96,8 +96,8 @@ function Mapa(props){
         const longitudDouble = parseFloat(longitude);
 
         const newUserLocation = {
-          latitude: -2.901267 , 
-          longitude: -79.013714,
+          latitude: latitudDouble , 
+          longitude: longitudDouble,
         };
         setUserLocation(newUserLocation);  
       }
@@ -168,7 +168,7 @@ function Mapa(props){
             coordinate={objectLocation}
             title="Objeto"
             image={require('../../assets/imagenes/gas.png')}
-            style={{ width: 30, height: 30 }} // Ajusta el tamaño según tus necesidades
+            style={{ width: 30, height: 30, resizeMode: 'contain' }} // Ajusta el tamaño según tus necesidades
           />
 
         )}
@@ -256,6 +256,7 @@ function Mapa(props){
               coordinate={{ latitude: parseFloat(marker.coordenadas.latitude), longitude: parseFloat(marker.coordenadas.longitude) }}
               title={marker.distribuidor}
               image={require('../../assets/imagenes/camion.png')}
+              style={{width: 30, height: 30, resizeMode: 'contain'}}
             />
           ))}
 

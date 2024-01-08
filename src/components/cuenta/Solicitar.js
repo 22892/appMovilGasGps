@@ -68,6 +68,7 @@ function Solicitar(props) {
     const [codigoPedido, setcodigoPedido] = useState("")
     const [mensajeError, setmensajeError] = useState("");
     const [erroDatosPedido, seterroDatosPedido] = useState(false)
+    const [messageEror, setmessageEror] = useState("")
 
     const txtNombre = useRef()
     const txtApellido = useRef()
@@ -87,6 +88,8 @@ function Solicitar(props) {
         apellido: "CUZCO",
         telefono: "",
     });
+    const [puntosGrafica, setpuntosGrafica] = useState([])
+
 
 
     const handleSheetChanges = useCallback((index: number) => {
@@ -192,85 +195,154 @@ function Solicitar(props) {
 
     const obtenerDireccion = async () => {
         try {
-            setCargando(true)
-            const response = await fetch(
+
+            console.log("peticiones cada 33333333")
+            setCargando(true);
+        
+            let intentos = 0;
+            let direccionEncontrada = false;
+        
+            while (!direccionEncontrada && intentos < 3) {
+              const response = await fetch(
                 `https://maps.googleapis.com/maps/api/geocode/json?latlng=${region.latitude},${region.longitude}&key=${YOUR_GOOGLE_MAPS_API_KEY}`
-            );
-  
-            const data = await response.json();
-  
-            if (data.status === 'OK') {
+              );
+        
+              const data = await response.json();
+        
+              if (data.status === 'OK') {
                 setDireccion(data.results[0].formatted_address);
-                setCargando(false)
-            } else {
+                direccionEncontrada = true;
+                setCargando(false);
+              } else {
                 console.error('Error en la solicitud:', data.status);
+                intentos++;
+                // Espera un momento antes de intentar nuevamente (puedes ajustar el tiempo)
+                await new Promise(resolve => setTimeout(resolve, 3000));
+              }
             }
-        } catch (error) {
-          console.error('Error al procesar la solicitud:', error.message);
-        }
+            setCargando(false);
+          } catch (error) {
+            setCargando(false);
+            console.error('Error al procesar la solicitud:', error.message);
+          }
     };
 
 
     const obtenerUbicacionConductor = async () =>{
 
         setisVisibleLoading(true)
+        seterrorApi(false)
 
         let headers = {
             Accept: 'application/json',
             'Content-Type': 'application/json'
         }
 
-    
-        var objetoEnviar = {
 
-            "punto_inicial": {
-                "latitude": region.latitude,
-                "longitude": region.longitude
-            },
-            "ruta_punto": 0
+        try {
+            AsyncStorage.getItem('persona').then(async(data) => {
+                if (data != null) {
+
+                    const login = JSON.parse(data);
+
+                    console.log("cargando.......")
+                    console.log(login)
+
+                    var objetoEnviar = {
+
+
+                        "pedidoCliente": {
+                            "identificacion": login.persona.cedula,
+                            "nombres_completos": login.persona.nombre +" "+ login.persona.apellido,
+                            "correo_electronico": "correo@gmail.com",
+                            "telefono": login.persona.telefono,
+                            "direccion": direccion,
+                            "referencia": direccion,
+                            "codigoPedido": codigoPedido,
+                            "cantidad": login.persona.numeroCilindro,
+                            "latitude": region.latitude,
+                            "longitude": region.longitude
+                        }
+                        
+                    }
+            
+                    console.log("que esta pasando")
+                    console.log(objetoEnviar)
+            
+                    await HttpPost(urlApi + 'solicitud_pedido/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+                       
+                        if(status == 200){
+            
+            
+                            if(data.error){
+            
+                                console.log("tiene erorr ")
+                                setisVisibleLoading(false)
+                                seterrorApi(true)
+                                setconfirmaPedido(false)
+                                setmessageEror("LAMENTAMOS NO TENER UN CONDCUTOR EN TU SECTOR")
+            
+                            }else{
+                                const resul = data.distribuidor_asignado.ruta_corta
+                                const puntoDubuja = data.distribuidor_asignado.puntos_ruta.coordinates
+            
+                                console.log("resultado api:...................")
+                                //console.log(puntoDubuja)
+                                setpuntosGrafica(puntoDubuja)
+                
+                               
+                
+                                const locationConductor = {
+                                    latitude: resul.latitude , 
+                                    longitude: resul.longitude,
+                                };
+                
+                                //console.log("nuevo dato")
+                                //console.log(locationConductor)
+                
+                                setconductorLocation(locationConductor)
+                                setconfirmaPedido(true)
+                                sheetRef.current?.close();
+                                setIsOpen(false)   
+                                setisVisibleLoading(false)
+                
+                            }
+            
+                    
+                        }
+            
+                      
+            
+                    }).catch((error) => {
+                        
+                        console.log("erro generar solicitud")
+                        seterrorApi(true)
+                        setconfirmaPedido(false)
+                        setisVisibleLoading(false)
+                        setmessageEror("ERROR AL REALIZAR PEDIDO GAS")
+                    })
+            
+            
+                    console.log("objeto")
+                    console.log(objetoEnviar)
+            
+                }
+            });
+          } catch (error) {
+           
+            console.log('erro recuepera user')
+            console.log(error)
         }
 
 
-        await HttpPost(urlApi + 'punto_distribuidor_ruta/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
-           
-            if(status == 200){
-
-                const resul = data.ruta_corta
-
-                const locationConductor = {
-                    latitude: resul.latitude , 
-                    longitude: resul.longitude,
-                };
-
-                //console.log("nuevo dato")
-                //console.log(locationConductor)
-
-                setconductorLocation(locationConductor)
-                setconfirmaPedido(true)
-                sheetRef.current?.close();
-                setIsOpen(false)   
-                setisVisibleLoading(false)
-        
-            }
-
-          
-
-        }).catch((error) => {
-            
-            console.log("error obterr puntos")
-            seterrorApi(true)
-            setconfirmaPedido(false)
-            setisVisibleLoading(false)
-        })
-
-
-        console.log("objeto")
-        console.log(objetoEnviar)
+    
     }
 
 
 
     const obtenerUbicacionConductoresConectados = async () =>{
+
+        seterrorApi(false)
 
         let headers = {
             Accept: 'application/json',
@@ -282,7 +354,7 @@ function Solicitar(props) {
            
             if(status == 200){
     
-              console.log(JSON.stringify(data));
+              //console.log(JSON.stringify(data));
               setltsConducotresConexion(data)
                 
             }
@@ -292,6 +364,7 @@ function Solicitar(props) {
             
             console.log("error obterr puntos")
             seterrorApi(true)
+            setmessageEror("ERROR AL OBTENER CONDCUCTORES DISPONIBLES")
             
         })
     
@@ -420,7 +493,7 @@ function Solicitar(props) {
 
             {errorApi == true? (
                 <View>
-                    <ModalVentana isVisible={errorApi} text="Error Server Recuperar Conductores " title="ERROR" primerColor={primerColor} segundoColor={segundoColor}/>
+                    <ModalVentana isVisible={errorApi} text={messageEror} title="INFORMATIVO" primerColor={primerColor} segundoColor={segundoColor}/>
                 </View>
 
             ):(
@@ -462,7 +535,7 @@ function Solicitar(props) {
 
                 </View>
 
-                <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={1} confirmaPedido={confirmaPedido} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} ltsConducotresConexion={ltsConducotresConexion}/>
+                <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={1} confirmaPedido={confirmaPedido} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} ltsConducotresConexion={ltsConducotresConexion} puntosGrafica={puntosGrafica}/>
 
                 <BottomSheet
                             ref={sheetRef}

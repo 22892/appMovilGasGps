@@ -20,7 +20,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import ModalVentana from '../cuenta/ModalVentana';
 
 var { height, width } = Dimensions.get('window');
 
@@ -281,11 +281,14 @@ function ListadoEventos(props) {
            
             console.log("qqqqqqqqqqqqqq")
             console.log(data)
+           
             if(status == 200){
-
+                console.log(data.estado)
                 if(data.estado == "ok"){
                     console.log("verifica login")
                     console.log(data.estado)
+                }else{
+
                 }
             }
 
@@ -352,6 +355,8 @@ function ListadoEventos(props) {
         <View style={{ width: '100%' }}>
 
             <Loading text="Obteniendo Cliente" isVisible={isVisibleLoading} color={segundoColor} />
+
+            <ModalVentana isVisible={errorApi} text="No se pudo obtener ubicación Cliente " title="INFORMATIVO" primerColor={primerColor} segundoColor={segundoColor}/>
 
 
             <View style={{flexDirection: 'row'}}>

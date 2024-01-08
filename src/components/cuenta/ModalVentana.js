@@ -1,16 +1,21 @@
 import React, {useState} from 'react'
-import { View, Text, Modal, StyleSheet, TouchableOpacity} from 'react-native'
+import { View, Text, Modal, StyleSheet, TouchableOpacity, BackHandler} from 'react-native'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 
 function ModalVentana(props) {
 
-    const { isVisible, text, color, title, primerColor, segundoColor } = props;
+    const { isVisible, text, color, title, primerColor, segundoColor, codigoEjecuacion } = props;
     const [modalVisible, setModalVisible] = useState(isVisible);
 
     const aceptarEvento = () =>{
       setModalVisible(false)
+
+      if(codigoEjecuacion == 1){
+        BackHandler.exitApp()
+      }
     }
+
   
 
     return (

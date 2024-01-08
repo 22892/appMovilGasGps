@@ -44,6 +44,7 @@ function Navigation(props){
     const [error, setisError] = useState(false);
     const [tipoUsuario, settipoUsuario] = useState(0)
     const [isDropdownVisible, setDropdownVisible] = useState(false);    
+    const [messageEror, setmessageEror] = useState("")
 
 
     const [region, setRegion] = useState({
@@ -99,10 +100,6 @@ function Navigation(props){
 
         obtenerUbicacion()
 
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 6000); 
-
     }, []);
 
 
@@ -121,6 +118,8 @@ function Navigation(props){
 
     const obtenerUbicacion = async () => {
         console.log('obtiene ubicacion navigation')
+
+        setisError(false)
         
         try {
           let permiso;
@@ -149,29 +148,47 @@ function Navigation(props){
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
               });
+
+              setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); 
               
-              console.log(region.latitude)
+              console.log("si enyra")
+              console.log(position.coords)
 
             } catch (error) {
               console.log('entra errr')
               setisError(true)
-              console.log(error);
+              setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
             }
       
           } else {
+            setisError(true)
+            setmessageEror("PERMISO DE UBICACIÓN NO OTORGADO")
             console.log('Permiso de ubicación no otorgado');
           }
         } catch (error) {
-          
-          console.log(error);
+            setisError(true)  
+            setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
+        }finally {
+
+            setIsLoading(false); 
+            setisError(true)  
+            setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
         }
     };
     
     if (isLoading) {
+        console.log("loadinnkkkkkkkkkkkkkkk")
         return (
             <>
                 <ImageBackground source={require('../assets/imagenes/gps.jpg')} style={{ flex: 1, width: '100%', height: screenHeight, position: 'absolute', top: 0, alignItems: 'center' }}>
                 <StatusBar translucent backgroundColor="transparent" />
+
+                {error && (
+                <ModalVentana isVisible={error} text={messageEror} title="PERMISOS" codigoEjecuacion={1} primerColor={primerColor} segundoColor={segundoColor}/>
+                )}
+
                 </ImageBackground>
             </>
         );
@@ -243,7 +260,7 @@ function Navigation(props){
                     <Stack.Screen
                         name="ScreenLogin"
                         component={ScreenLogin}
-                        initialParams={{ primerColor: primerColor, segundoColor: segundoColor,  tipoUsuario: tipoUsuario }}
+                        initialParams={{ primerColor: primerColor, segundoColor: segundoColor,  tipoUsuario: tipoUsuario, region: region }}
                         options={{ headerShown: false, title: 'sadas', headerBackTitleVisible: false }}
     
                     />
@@ -387,11 +404,6 @@ function Navigation(props){
                 </Stack.Navigator>
     
                 </>
-
-
-
-    
-
 
         </>
 
