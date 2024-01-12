@@ -20,13 +20,14 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import firestore from '@react-native-firebase/firestore'
 
 import Loading from '../../utils/Loading';
 import ModalVentana from './ModalVentana';
 import Mapa from '../mapa/Mapa';
 import { HttpPost, HttpGet, HttpPatch, HttpPostSinBody } from '../../utils/httpApi';
 import {url} from '../../utils/url'
+
 
 
   var { height, width } = Dimensions.get('window');
@@ -83,11 +84,7 @@ function Solicitar(props) {
         codigoPedido: "",
         numeroCilindro: 0
     });
-    const [datosConductor, setdatosConductor] = useState({
-        nombre: "BERNARDO",
-        apellido: "CUZCO",
-        telefono: "",
-    });
+    const [datosConductor, setdatosConductor] = useState("");
     const [puntosGrafica, setpuntosGrafica] = useState([])
 
 
@@ -197,6 +194,9 @@ function Solicitar(props) {
         try {
 
             console.log("peticiones cada 33333333")
+
+            console.log(region)
+
             setCargando(true);
         
             let intentos = 0;
@@ -228,7 +228,37 @@ function Solicitar(props) {
     };
 
 
-    const obtenerUbicacionConductor = async () =>{
+    const guardarPedidoDBFirebase = async (pedido) => {
+
+        console.log("entra firebase")
+        console.log(pedido)
+
+        try {
+            
+            firestore().collection('Pedidos').add(
+                {
+                    identificacion: pedido.cedula,
+                    nombres_completos: pedido.nombre +" "+ pedido.apellido,
+                    correo_electronico: "correo@gmail.com",
+                    telefono: pedido.telefono,
+                    direccion: direccion,
+                    referencia: direccion,
+                    codigoPedido: codigoPedido,
+                    cantidad: pedido.numeroCilindro,
+                    latitude: region.latitude,
+                    longitude: region.longitude,
+                    fecha: new Date(),
+                    estado: false
+                }
+            )
+
+        } catch (error) {
+            console.log("erro firebase")
+            console.log(error)
+        }
+    }
+
+    const realizarPedidoGas = async () =>{
 
         setisVisibleLoading(true)
         seterrorApi(false)
@@ -287,10 +317,11 @@ function Solicitar(props) {
                                 const puntoDubuja = data.distribuidor_asignado.puntos_ruta.coordinates
             
                                 console.log("resultado api:...................")
-                                //console.log(puntoDubuja)
-                                setpuntosGrafica(puntoDubuja)
-                
-                               
+                                console.log(data)
+                                console.log(data.distribuidor_asignado.nombre_distribuidor)
+
+                                nombreConductor(data.nombre_distribuidor)
+                                //setpuntosGrafica(puntoDubuja)
                 
                                 const locationConductor = {
                                     latitude: resul.latitude , 
@@ -299,12 +330,16 @@ function Solicitar(props) {
                 
                                 //console.log("nuevo dato")
                                 //console.log(locationConductor)
+
+                                guardarPedidoDBFirebase(login.persona)
                 
                                 setconductorLocation(locationConductor)
                                 setconfirmaPedido(true)
                                 sheetRef.current?.close();
                                 setIsOpen(false)   
                                 setisVisibleLoading(false)
+
+
                 
                             }
             
@@ -315,7 +350,9 @@ function Solicitar(props) {
             
                     }).catch((error) => {
                         
+
                         console.log("erro generar solicitud")
+                        console.log(error)
                         seterrorApi(true)
                         setconfirmaPedido(false)
                         setisVisibleLoading(false)
@@ -413,7 +450,7 @@ function Solicitar(props) {
                   persona: login,
                 }));
                 setisVisibleLoading(false)
-                obtenerUbicacionConductor()
+                realizarPedidoGas()
 
               } catch (error) {
                 setmensajeError("Error al realizar Pedido!!!")
@@ -440,6 +477,16 @@ function Solicitar(props) {
         obtenerUbicacionConductoresConectados()
 
     };
+
+    const nombreConductor = (nombre) =>{
+        const name = `El conductor ${nombre} está cerca de tu domicilio, ¡estar pendiente!`;
+
+        console.log('que vegar aosa')
+        console.log(nombre)
+
+        setdatosConductor(name)
+
+    }
 
     const handleTextChange = (text) => {
         // Validar que el texto sea un número antes de actualizar el estado
@@ -504,7 +551,7 @@ function Solicitar(props) {
 
             {finalizaEntrega == true ? (
                 <View>
-                    <ModalVentana isVisible={finalizaEntrega} text="El Conductor Juan Alvarez esta cerca de tu domicilio, estar pendiente!!! " title="Entrega Finalizada" primerColor={primerColor} segundoColor={segundoColor}/>
+                    <ModalVentana isVisible={finalizaEntrega} text={datosConductor} title="Entrega Finalizada" primerColor={primerColor} segundoColor={segundoColor}/>
                 </View>
            
             ):(

@@ -21,6 +21,8 @@ import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalVentana from '../cuenta/ModalVentana';
+import firestore from '@react-native-firebase/firestore'
+
 
 var { height, width } = Dimensions.get('window');
 
@@ -57,18 +59,7 @@ function ListadoEventos(props) {
 
 
 
-    const [dataEventos, setdataEventos] = useState([
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca' },
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'},
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'},
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'},
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'},
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'},
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'},
-        {name: 'Pedro', lastname: 'Alvarez', zona: 'Cuenca'}
-
-
-    ]);
+    const [dataPedidos, setdataPedidos] = useState([]);
 
 
 
@@ -92,10 +83,11 @@ function ListadoEventos(props) {
 
     useEffect(() => {
 
+        obtenerPedidos()
+
         console.log("persona loge")
         console.log(dataPerson)
         obtenerUbicacion();
-
         const intervalId = setInterval(obtenerUbicacion, 30000);
         return () => clearInterval(intervalId);
 
@@ -171,6 +163,7 @@ function ListadoEventos(props) {
     
     const aceptarSolicitud = async () =>{
 
+        console.log("gggggggggggggggggggggg")
         await obtenerUbicacionCliente();
 
 
@@ -300,20 +293,52 @@ function ListadoEventos(props) {
 
 
 
+    const obtenerPedidos = async () =>{
+
+        console.log("entra obtenrrrrrrrr")
+        /*try{
+            const ltsPedidos = await firestore().collection('Pedidos').get()
+            setdataPedidos(ltsPedidos.docs)
+    
+        }catch(error){
+
+            console.log("eror obtenr pediod")
+            console.log(error)
+        }*/
+
+        try{
+            const subcribe = await firestore().collection('Pedidos').onSnapshot(querySnapshot =>{
+                const pedidos = []
+                querySnapshot.forEach(documentSnapshot =>{
+                    pedidos.push({
+                        ...documentSnapshot.data(),
+                        key: documentSnapshot.id
+                    })
+                })
+                setdataPedidos(pedidos)
+
+            })
+    
+        }catch(error){
+
+            console.log("eror obtenr pediod")
+            console.log(error)
+        }
+
+    }
+
+
     const itemEvento = ({ item }) => {
         
         return (
-            <TouchableOpacity onPress={aceptarSolicitud} style={{}}>
+            <View style={{}}>
                 <View 
                     style={{ width: '100%', height: porcentaje(22), flexDirection: 'row', borderRadius: 10, backgroundColor: '#E1E1E1'}}>
 
-                    <View>
 
-                    </View>
-
-                    <View style={{ width: porcentaje(40), height: porcentaje(25), justifyContent: 'center' }}>
+                    <View style={{ width: porcentaje(30), height: porcentaje(25), justifyContent: 'center' }}>
                         <Image
-                            source={require('../../assets/imagenes/gps.jpg')}
+                            source={require('../../assets/imagenes/avatar.png')}
                             indicatorProps={{
                                 size: 20,
                                 borderWidth: 0,
@@ -321,29 +346,41 @@ function ListadoEventos(props) {
                                 unfilledColor: '#c4c4c4',
                                 borderRadius: '50%'
                             }}
-                            style={{ width: porcentaje(35), height: porcentaje(10) }}
+                            style={{ width: porcentaje(30), height: porcentaje(10) }}
                             resizeMode="contain"
                         />
-                        <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins-Light', width: '90%', textAlign: 'center' }}>{item.name}</Text>
-                        <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins-SemiBold', width: '90%', textAlign: 'center' }}>{item.lastname}</Text>
+                        <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins-Light', width: '90%', textAlign: 'center' }}>{item.nombres_completos}</Text>
+                        <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins-SemiBold', width: '90%', textAlign: 'center' }}>Nro Gas: {item.cantidad}</Text>
 
                         
                     </View>
 
-                    <View style={{ width: porcentaje(28), height: porcentaje(25), justifyContent: 'center' }}>
-                        <Text style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins-Light', textAlign: 'center' }}>{item.zona}</Text>
+                    <View style={{ width: porcentaje(40), height: porcentaje(25), justifyContent: 'center' }}>
+                        <Text style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins-Light', textAlign: 'center' }}>{item.direccion}</Text>
 
                     </View>
-                    <View style={{ width: porcentaje(30), height: porcentaje(25), justifyContent: 'center' }}>
 
-                        <FontAwesome5 name="check" size={20} color="#3498db" style={{textAlign: 'center'}} />
-                    </View>
-                   
+                    <TouchableOpacity
+                                     style={{
+                                        width: porcentaje(22), height: porcentaje(12),
+                                        backgroundColor: primerColor,
+                                        padding: 15,
+                                        borderRadius: 10,
+                                        left: '20%', 
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        marginTop: porcentaje(5),
+                                        marginRight: porcentaje(1)
+                                    }}
+                                    onPress={() => aceptarSolicitud()}>
+                                    <Text style={{color: 'white', textAlign: 'center'}}>Aceptar</Text>
+                    </TouchableOpacity>
+                  
 
                 </View>
                 <Divider style={styles.divider} />
 
-            </TouchableOpacity>
+            </View>
 
 
         )
@@ -359,21 +396,9 @@ function ListadoEventos(props) {
             <ModalVentana isVisible={errorApi} text="No se pudo obtener ubicación Cliente " title="INFORMATIVO" primerColor={primerColor} segundoColor={segundoColor}/>
 
 
-            <View style={{flexDirection: 'row'}}>
-                <Text style={styles.colorCabecera}>
-                    Cliente
-                </Text>
-                <Text style={styles.colorCabecera3}>
-                    Destino
-                </Text>
-                <Text style={styles.colorCabecera2}>
-                    Aceptar
-                </Text>
-                
-            </View>
             <View>
                 <FlatList
-                    data={dataEventos}
+                    data={dataPedidos}
                     numColumns={1}
                     style={{}}
                     keyExtractor={(item, index) => index.toString()}

@@ -65,7 +65,7 @@ function Mapa(props){
       if(confirmaPedido){
 
         console.log("punrtss")
-        console.log(ltsConducotresConexion)
+        //console.log(ltsConducotresConexion)
        
         const { latitude, longitude } = conductorLocation
         const latitudDouble = parseFloat(latitude);

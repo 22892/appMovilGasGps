@@ -45,6 +45,7 @@ function Navigation(props){
     const [tipoUsuario, settipoUsuario] = useState(0)
     const [isDropdownVisible, setDropdownVisible] = useState(false);    
     const [messageEror, setmessageEror] = useState("")
+    const [verificaDatos, setverificaDatos] = useState(false);    
 
 
     const [region, setRegion] = useState({
@@ -149,6 +150,7 @@ function Navigation(props){
                 longitudeDelta: 0.0421,
               });
 
+              setverificaDatos(true)
               setTimeout(() => {
                 setIsLoading(false);
               }, 1000); 
@@ -172,9 +174,9 @@ function Navigation(props){
             setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
         }finally {
 
+
             setIsLoading(false); 
-            setisError(true)  
-            setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
+
         }
     };
     

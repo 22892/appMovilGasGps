@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "621063419921",
+    "project_id": "georapid-247d8",
+    "storage_bucket": "georapid-247d8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:621063419921:android:47b40cb3f4a6e098f6d9b0",
+        "android_client_info": {
+          "package_name": "com.appgasgps"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBAbGWxGbvYyVZB82M7G9hTGW1SoFTpSw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
