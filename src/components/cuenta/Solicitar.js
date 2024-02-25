@@ -87,6 +87,12 @@ function Solicitar(props) {
     const [datosConductor, setdatosConductor] = useState("");
     const [puntosGrafica, setpuntosGrafica] = useState([])
 
+    const [regionActual, setRegionActual] = useState({
+        latitude: region.latitude,
+        longitude: region.longitude,
+      })
+    
+
 
 
     const handleSheetChanges = useCallback((index: number) => {
@@ -100,9 +106,6 @@ function Solicitar(props) {
                
                 if(login.persona.tipoPersona == 1){
                   
-                    console.log('recupera persona lciente')
-                    console.log(login.persona.nombre)
-
                     const datosRecuperado = {
                         nombre: login.persona.nombre,
                         apellido: login.persona.apellido,
@@ -151,11 +154,6 @@ function Solicitar(props) {
             obtenerDireccion();
             setIsOpen(true)
             obtenerUbicacionConductoresConectados()
-            
-    
-            console.log("sissiisisis")
-            console.log(urlApi)
-    
 
         };
 
@@ -195,7 +193,7 @@ function Solicitar(props) {
 
             console.log("peticiones cada 33333333")
 
-            console.log(region)
+            console.log(regionActual)
 
             setCargando(true);
         
@@ -204,7 +202,7 @@ function Solicitar(props) {
         
             while (!direccionEncontrada && intentos < 3) {
               const response = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${region.latitude},${region.longitude}&key=${YOUR_GOOGLE_MAPS_API_KEY}`
+                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${regionActual.latitude},${regionActual.longitude}&key=${YOUR_GOOGLE_MAPS_API_KEY}`
               );
         
               const data = await response.json();
@@ -245,8 +243,8 @@ function Solicitar(props) {
                     referencia: direccion,
                     codigoPedido: codigoPedido,
                     cantidad: pedido.numeroCilindro,
-                    latitude: region.latitude,
-                    longitude: region.longitude,
+                    latitude: regionActual.latitude,
+                    longitude: regionActual.longitude,
                     fecha: new Date(),
                     estado: false
                 }
@@ -257,6 +255,7 @@ function Solicitar(props) {
             console.log(error)
         }
     }
+
 
     const realizarPedidoGas = async () =>{
 
@@ -277,6 +276,8 @@ function Solicitar(props) {
 
                     console.log("cargando.......")
                     console.log(login)
+                    console.log("nueva ubicacion peidido")
+                    console.log(regionActual)
 
                     var objetoEnviar = {
 
@@ -290,8 +291,8 @@ function Solicitar(props) {
                             "referencia": direccion,
                             "codigoPedido": codigoPedido,
                             "cantidad": login.persona.numeroCilindro,
-                            "latitude": region.latitude,
-                            "longitude": region.longitude
+                            "latitude": regionActual.latitude,
+                            "longitude": regionActual.longitude
                         }
                         
                     }
@@ -331,7 +332,7 @@ function Solicitar(props) {
                                 //console.log("nuevo dato")
                                 //console.log(locationConductor)
 
-                                guardarPedidoDBFirebase(login.persona)
+                                //guardarPedidoDBFirebase(login.persona)
                 
                                 setconductorLocation(locationConductor)
                                 setconfirmaPedido(true)
@@ -478,6 +479,14 @@ function Solicitar(props) {
 
     };
 
+
+    const actualizaDireccion = (nuevaDireccion, nuevaRegion) =>{
+        console.log("direccion nueva")
+        setDireccion(nuevaDireccion)
+        setRegionActual(nuevaRegion)
+        
+    }
+
     const nombreConductor = (nombre) =>{
         const name = `El conductor ${nombre} está cerca de tu domicilio, ¡estar pendiente!`;
 
@@ -582,7 +591,7 @@ function Solicitar(props) {
 
                 </View>
 
-                <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={1} confirmaPedido={confirmaPedido} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} ltsConducotresConexion={ltsConducotresConexion} puntosGrafica={puntosGrafica}/>
+                <Mapa primerColor={primerColor} segundoColor={segundoColor} region={regionActual} tipo={1} confirmaPedido={confirmaPedido} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} actualizaDireccion={actualizaDireccion} ltsConducotresConexion={ltsConducotresConexion} />
 
                 <BottomSheet
                             ref={sheetRef}

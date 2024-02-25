@@ -7,6 +7,7 @@ import {
     FlatList,
     StyleSheet,
     BackHandler,
+    ScrollView,
     Modal
 } from 'react-native';
 import { Image, Divider } from '@rneui/themed';
@@ -38,22 +39,39 @@ const porcentaje = (porcentaje) => {
 function ListadoEventos(props) {
 
     const {navigation} = props
-    const { primerColor, segundoColor, region, dataPerson } = props.route.params
+    const { primerColor, segundoColor, region, dataPerson, estadoPedido } = props.route.params
     const navigationRetrocede = useNavigation();
 
     const [confirmaPedido, setconfirmaPedido] = useState(true);
     const urlApi = url()
     const [errorApi, seterrorApi] = useState(false);
+    const [estadoPedidos, setestadoPedido] = useState(estadoPedido ?? false);
     const [conductorLocation, setconductorLocation] = useState(null);
     const [finalizaEntrega, setfinalizaEntrega] = useState(false);
     const [tipoUsuario, settipoUsuario] = useState(2)
     const [isVisibleLoading, setisVisibleLoading] = useState(false);
+    const [messageLoading, setisMessageLoading] = useState("");
+    const [messageError, setisMessageError] = useState("");
     const [error, setisError] = useState(false);
     const [regionNueva, setRegionNueva] = useState({
         latitude: region.latitude,
         longitude: region.longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
+    });
+    const [puntosGrafica, setpuntosGrafica] = useState([])
+    const [regionActualizada, setRegionActualizada] = useState({
+        latitude: region.latitude,
+        longitude: region.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+    });
+    const [datosPedidoCliente, setDatosPedidoCliente] = useState({
+        idPedido: 0,
+        nombre: '',
+        direccion: '',
+        cantidad: 0,
+        telefono: ''
     });
 
 
@@ -83,15 +101,28 @@ function ListadoEventos(props) {
 
     useEffect(() => {
 
-        obtenerPedidos()
+        //obtenerPedidos()
 
-        console.log("persona loge")
-        console.log(dataPerson)
+        console.log("ubicacio  actual conductor ------------>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>************")
+
+        obtenerUbicacionActualCondcutor()
+        obnerPedidoClientes()
+
         obtenerUbicacion();
-        const intervalId = setInterval(obtenerUbicacion, 30000);
+        const intervalId = setInterval(obtenerUbicacion, 10000);
         return () => clearInterval(intervalId);
 
     }, []);
+
+
+    /*useEffect(() => {
+
+        console.log("******************************************************************************")
+        
+        obtenerUbicacionActualCondcutor()
+
+
+    }, [estadoPedidos]);*/
 
 
 
@@ -149,7 +180,60 @@ function ListadoEventos(props) {
           }
         } catch (error) {
           
-          console.log(error);
+            console.log('erorr ubucacion')
+            console.log(error);
+        }
+    };
+
+
+
+
+    const obtenerUbicacionActualCondcutor = async () => {
+        console.log('EJECUTA SOLO CUANDO SE ESTA EN ESTA PANTALLA?------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+        console.log(dataPerson)
+        try {
+          let permiso;
+          if (Platform.OS === 'android') {
+            permiso = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+          } else if (Platform.OS === 'ios') {
+            permiso = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+          }
+    
+          if (permiso === 'granted') {
+            // Obtener ubicación aquí
+            try {
+              const position = await new Promise((resolve, reject) => {
+                Geolocation.getCurrentPosition(resolve, reject, {
+                  enableHighAccuracy: true,
+                  timeout: 20000,
+                  maximumAge: 1000,
+                });
+              });
+              
+              
+              const { latitude, longitude } = position.coords;
+
+              setRegionActualizada({
+                latitude,
+                longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              });
+              
+
+            } catch (error) {
+              console.log('entra errr REGION ACTULAIZADAAAAAAAAAAAAAAAAAA')
+              setisError(true)
+              console.log(error);
+            }
+      
+          } else {
+            console.log('Permiso de ubicación no otorgado');
+          }
+        } catch (error) {
+          
+            console.log('erorr ubucacion')
+            console.log(error);
         }
     };
 
@@ -163,88 +247,36 @@ function ListadoEventos(props) {
     
     const aceptarSolicitud = async () =>{
 
-        console.log("gggggggggggggggggggggg")
-        await obtenerUbicacionCliente();
+        await trazarRutaPedidosCliente();
 
 
     } 
 
-    
-    const terminaEntregaMapa = () => {
-        console.log("recibe señal conduc")
-        setconfirmaPedido(false)
+    const recuperarNuevamentePedidos = async () =>{
 
+        seterrorApi(false)
+        obnerPedidoClientes()
+
+    } 
+
+
+    
+    const terminaEntregaMapa = (cedula, idPedido) => {
+        console.log("recibe señal  CONDUCTOR _----------------------------***************************************")
+        console.log(idPedido)
+        setconfirmaPedido(false)
+        
+    };
+
+    const actualizaListaPedido = () => {
+        console.log("ACTUALIZA----------------------------***************************************")
+        obnerPedidoClientes()
     };
 
 
 
-    const obtenerUbicacionCliente = async () =>{
-
-
-        setisVisibleLoading(true)
-
-
-        let headers = {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-        }
-
-        var objetoEnviar = {
-
-            "punto_inicial": {
-                "latitude": regionNueva.latitude,
-                "longitude": regionNueva.longitude
-            },
-            "ruta_punto": 0
-        }
-
-
-        await HttpPost(urlApi + 'punto_distribuidor_ruta/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
-           
-            if(status == 200){
-
-                const resul = data.ruta_corta
-
-                console.log("respuesta punto cercao")
-                console.log(resul)
-
-                const locationConductor = {
-                    latitude: resul.latitude , 
-                    longitude: resul.longitude,
-                };
-
-                setconductorLocation(locationConductor)
-                setconfirmaPedido(true)
-              
-
-                const timeoutId = setTimeout(() => {
-                  
-                    setisVisibleLoading(false)
-                    navigation.navigate('MainMenuConductor', {confirmaPedido: true, conductorLocation: locationConductor, cambiaEstadoEntrega: terminaEntregaMapa()})
-
-
-                }, 3000);
-              
-                return () => {
-                    clearTimeout(timeoutId);
-                };
-
-               
-            }
-
-          
-
-        }).catch((error) => {
-            
-            console.log("error obterr puntos")
-            seterrorApi(true)
-            setisVisibleLoading(false)
-
-        })
-
-
-        console.log("objeto-------------------->>>>>>>>>>>>>>")
-        console.log(objetoEnviar)
+    const trazarRutaPedidosCliente = async () =>{
+        navigation.navigate('MainMenuConductor', {confirmaPedido: true, region: regionActualizada, conductorLocation: conductorLocation, cambiaEstadoEntrega: terminaEntregaMapa(), datosPedidoCliente: datosPedidoCliente, actualizaListaPedido: actualizaListaPedido})
     }
 
 
@@ -272,22 +304,94 @@ function ListadoEventos(props) {
 
         await HttpPost(urlApi + 'actualiza_posicion/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
            
-            console.log("qqqqqqqqqqqqqq")
-            console.log(data)
+            //console.log("qqqqqqqqqqqqqq")
+            //console.log(data)
            
             if(status == 200){
                 console.log(data.estado)
                 if(data.estado == "ok"){
                     console.log("verifica login")
                     console.log(data.estado)
+                    guardarConductorFirebase(latitude, longitude)
                 }else{
 
                 }
             }
 
         }).catch((error) => {
-           console.log(error)
+            console.log("error al actualizarPosicionConductor")
+            console.log(error)
         })
+
+    }
+
+    const obnerPedidoClientes = async () =>{
+
+        setisVisibleLoading(true)
+        setisMessageLoading("CARGANDO....")
+
+
+        let headers = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+
+        var objetoEnviar = {
+            "identificacion": dataPerson.cedula,
+        }
+
+
+        await HttpPost(urlApi + 'obtener_pedidos_distribuidor/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+           
+            console.log("pedido clientes-->>>>>>>>>>>>>>>>>>")
+            //console.log(data)
+
+            if(status == 200){
+                if(data.estado == "ok"){
+                    setisVisibleLoading(false)
+                    setdataPedidos(data.clientes)
+
+
+                    if(data.clientes.length > 0){
+
+                        const item = data.clientes[0];
+                        elementoDibujar = item.ruta.coordinates[item.ruta.coordinates.length-1]
+                        console.log("elemento dibujar----->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                        const locationConductor = {
+                            latitude: elementoDibujar[1], 
+                            longitude: elementoDibujar[0],
+                        };
+                        console.log(locationConductor)
+
+                        setDatosPedidoCliente({
+                            idPedido: item.idPedido,
+                            nombre: item.nombre,
+                            direccion: item.direccion,
+                            cantidad: item.cantidad,
+                            telefono: item.telefono
+                        })
+    
+                        setconductorLocation(locationConductor)
+
+
+                    }
+
+                }
+            }
+           
+            
+        }).catch((error) => {
+            console.log('eeror al recurprar pedidos----->>>>')
+           console.log(error)
+           seterrorApi(true)
+           setisMessageError("Error al recueprar Pedidos")
+           setisVisibleLoading(false)
+
+        })
+
+
+
 
     }
 
@@ -295,16 +399,9 @@ function ListadoEventos(props) {
 
     const obtenerPedidos = async () =>{
 
-        console.log("entra obtenrrrrrrrr")
-        /*try{
-            const ltsPedidos = await firestore().collection('Pedidos').get()
-            setdataPedidos(ltsPedidos.docs)
-    
-        }catch(error){
+        setisVisibleLoading(true)
+        setisMessageLoading("OBTENIENDO PEDIDOS PENDIENTES")
 
-            console.log("eror obtenr pediod")
-            console.log(error)
-        }*/
 
         try{
             const subcribe = await firestore().collection('Pedidos').onSnapshot(querySnapshot =>{
@@ -317,6 +414,9 @@ function ListadoEventos(props) {
                 })
                 setdataPedidos(pedidos)
 
+                setisVisibleLoading(false)
+
+
             })
     
         }catch(error){
@@ -328,6 +428,41 @@ function ListadoEventos(props) {
     }
 
 
+    const guardarConductorFirebase = async (latitude, longitude) => {
+        try {
+            // Consultar si ya existe un conductor con el mismo número de cédula
+            const querySnapshot = await firestore().collection('Conductor')
+                .where('identificacion', '==', dataPerson.cedula)
+                .get();
+    
+            if (querySnapshot.size > 0) {
+                // Si ya existe un conductor con el mismo número de cédula, actualizar el documento existente
+                const conductorExistente = querySnapshot.docs[0];
+                await conductorExistente.ref.update({
+                    latitude: latitude,
+                    longitude: longitude,
+                    fecha: new Date(),
+                    estado: false
+                });
+            } else {
+                // Si no existe, agregar un nuevo documento
+                await firestore().collection('Conductor').add({
+                    identificacion: dataPerson.cedula,
+                    latitude: latitude,
+                    longitude: longitude,
+                    fecha: new Date(),
+                    estado: false
+                });
+            }
+    
+        } catch (error) {
+            console.log("Error al guardar/con actualizar en Firebase el conductor");
+            console.error(error);
+        }
+    }
+    
+
+
     const itemEvento = ({ item }) => {
         
         return (
@@ -336,7 +471,7 @@ function ListadoEventos(props) {
                     style={{ width: '100%', height: porcentaje(22), flexDirection: 'row', borderRadius: 10, backgroundColor: '#E1E1E1'}}>
 
 
-                    <View style={{ width: porcentaje(30), height: porcentaje(25), justifyContent: 'center' }}>
+                    <View style={{ width: porcentaje(50), height: porcentaje(25), justifyContent: 'center' }}>
                         <Image
                             source={require('../../assets/imagenes/avatar.png')}
                             indicatorProps={{
@@ -346,10 +481,10 @@ function ListadoEventos(props) {
                                 unfilledColor: '#c4c4c4',
                                 borderRadius: '50%'
                             }}
-                            style={{ width: porcentaje(30), height: porcentaje(10) }}
+                            style={{ width: porcentaje(45), height: porcentaje(10) }}
                             resizeMode="contain"
                         />
-                        <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins-Light', width: '90%', textAlign: 'center' }}>{item.nombres_completos}</Text>
+                        <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 8, fontFamily: 'Poppins-Light', width: '90%', textAlign: 'center' }}>{item.nombre}</Text>
                         <Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins-SemiBold', width: '90%', textAlign: 'center' }}>Nro Gas: {item.cantidad}</Text>
 
                         
@@ -360,21 +495,6 @@ function ListadoEventos(props) {
 
                     </View>
 
-                    <TouchableOpacity
-                                     style={{
-                                        width: porcentaje(22), height: porcentaje(12),
-                                        backgroundColor: primerColor,
-                                        padding: 15,
-                                        borderRadius: 10,
-                                        left: '20%', 
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginTop: porcentaje(5),
-                                        marginRight: porcentaje(1)
-                                    }}
-                                    onPress={() => aceptarSolicitud()}>
-                                    <Text style={{color: 'white', textAlign: 'center'}}>Aceptar</Text>
-                    </TouchableOpacity>
                   
 
                 </View>
@@ -389,27 +509,74 @@ function ListadoEventos(props) {
 
     return (
 
+        
         <View style={{ width: '100%' }}>
 
-            <Loading text="Obteniendo Cliente" isVisible={isVisibleLoading} color={segundoColor} />
-
-            <ModalVentana isVisible={errorApi} text="No se pudo obtener ubicación Cliente " title="INFORMATIVO" primerColor={primerColor} segundoColor={segundoColor}/>
+            <Loading text={messageLoading} isVisible={isVisibleLoading} color={primerColor} />
 
 
-            <View>
-                <FlatList
+            {errorApi == true? (
+                <View>
+                    <ModalVentana isVisible={errorApi} text={messageError} title="INFORMATIVO" primerColor={primerColor} segundoColor={segundoColor}/>
+                </View>
+            ):(
+                <View>
+                </View>
+            )}
+
+           
+            <FlatList
                     data={dataPedidos}
                     numColumns={1}
                     style={{}}
                     keyExtractor={(item, index) => index.toString()}
-                    contentContainerStyle={{ paddingBottom: 48 }}
+                    contentContainerStyle={{ paddingBottom: 80 }}
                     renderItem={itemEvento}
                     onEndReached={info => {
                         console.log('pedor mas datos para cargar lista')
                     }}
 
-                />
+            />
+            
+
+            {errorApi == true? (
+                <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center' }}>
+                           <TouchableOpacity
+                               style={{
+                                   width: porcentaje(70), height: porcentaje(12),
+                                   backgroundColor: primerColor,
+                                   padding: 15,
+                                   borderRadius: 10,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                               }}
+                               onPress={() => recuperarNuevamentePedidos()}>
+                               <Text style={{color: 'white', textAlign: 'center'}}>CARGAR PEDIDO NUEVAMENTE</Text>
+                           </TouchableOpacity>
+           
+                </View>
+           
+            ):(
+                <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center' }}>
+                <TouchableOpacity
+                    style={{
+                        width: porcentaje(50), height: porcentaje(12),
+                        backgroundColor: primerColor,
+                        padding: 15,
+                        borderRadius: 10,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => aceptarSolicitud()}>
+                    <Text style={{color: 'white', textAlign: 'center'}}>VER RUTAS PEDIDOS</Text>
+                </TouchableOpacity>
+
             </View>
+
+            )}
+
+
+
 
 
 

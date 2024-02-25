@@ -9,6 +9,10 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Beneficios from '../components/cuenta/Beneficios';
 import Mapa from '../components/mapa/Mapa';
 
+import { HttpPost, HttpGet, HttpPatch, HttpPostSinBody } from '../utils/httpApi';
+import {url} from '../utils/url'
+
+
 const Tab = createBottomTabNavigator();
 
 
@@ -16,16 +20,65 @@ export default function MainMenuConductor(props){
 
     const { route } = useRoute();
     const {navigation} = props
-    const { primerColor, segundoColor, region, confirmaPedido, conductorLocation, cambiaEstadoEntrega } = props.route.params
+    const { primerColor, segundoColor, region, confirmaPedido, conductorLocation, cambiaEstadoEntrega, datosPedidoCliente } = props.route.params
     const [colorLetra, setcolorLetra] = useState("#FFFFFF")
     const [finalizaEntrega, setfinalizaEntrega] = useState(false);
     const [confirmaPedido2, setconfirmaPedido] = useState(confirmaPedido);
-
+    const [routeCoordinates, setRouteCoordinates] = useState([]);
+    const urlApi = url()
     
+
+
     useEffect(() => {
 
-    }, []);   
+    }, [props.route.params]);
  
+
+
+
+    const actualizarEstadoPedidoEntregado = async (cedula, idPedido) =>{
+
+        let headers = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+        var objetoEnviar = {
+            "identificacion": cedula,
+            "id_pedido": idPedido
+        }
+
+        console.log("pedido  actualziar-->>>>>>>>>>>>>>>>>>")
+        console.log(objetoEnviar)
+
+        await HttpPost(urlApi + 'finalizar_pedido/', headers, JSON.stringify(objetoEnviar), 5000).then(async ([data, status]) => {
+           
+            console.log("response")
+            console.log(data)
+           
+            if(status == 200){
+                console.log(data.estado)
+                if(data.estado == "ok"){
+                    console.log('MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM')
+                    const actualizaListaPedido = props.route.params.actualizaListaPedido;
+                    console.log(props.route.params)
+                    if (typeof actualizaListaPedido === 'function') {
+                        actualizaListaPedido();
+                    }     
+                }else{
+                    //navigation.navigate('ListadoEventos',{estadoPedido: false})
+
+                }
+            }
+
+        }).catch((error) => {
+            console.log("error al actualizarEstadoPedidoEntregado")
+            console.log(error)
+        })
+
+    }
+
+
 
     const verSolicitudes = () =>{
         console.log("cerar sesion")
@@ -33,12 +86,16 @@ export default function MainMenuConductor(props){
     }
 
     
-    const terminaEntregaMapa = () => {
-        console.log("recibe señal main menu")
+    const terminaEntregaMapa = (cedula, idPedido) => {
+        console.log("recibe señal main menu ------------------------------------------------------------------------------------------------")
+        console.log(cedula)
         setfinalizaEntrega(true)
         setconfirmaPedido(false)
-        
+        actualizarEstadoPedidoEntregado(cedula, idPedido)
     };
+
+
+
 
     return(
         <Tab.Navigator
@@ -102,7 +159,7 @@ export default function MainMenuConductor(props){
                 )
                 }}
             >
-                {() => <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={2} confirmaPedido={confirmaPedido2} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} />}
+                {() => <Mapa primerColor={primerColor} segundoColor={segundoColor} region={region} tipo={2} confirmaPedido={confirmaPedido2} conductorLocation={conductorLocation} cambiaEstadoEntrega={terminaEntregaMapa} finalizaEntrega={finalizaEntrega} navigation={navigation} datosPedidoCliente={datosPedidoCliente} />}
              </Tab.Screen>
         </Tab.Navigator>
 

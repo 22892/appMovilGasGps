@@ -143,6 +143,9 @@ function Navigation(props){
               
               const { latitude, longitude } = position.coords;
 
+              console.log("coordenadas navigation")
+              console.log(latitude)
+
               setRegion({
                 latitude,
                 longitude,
@@ -151,17 +154,25 @@ function Navigation(props){
               });
 
               setverificaDatos(true)
+             
               setTimeout(() => {
                 setIsLoading(false);
               }, 1000); 
+             
               
               console.log("si enyra")
               console.log(position.coords)
 
             } catch (error) {
-              console.log('entra errr')
-              setisError(true)
-              setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
+                console.log('entra errr')
+                //setisError(true)
+                //setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
+                setRegion({
+                    latitude: -2.898770,
+                    longitude: -79.001155,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                });
             }
       
           } else {
@@ -174,11 +185,39 @@ function Navigation(props){
             setmessageEror("REVISA TU CONEXIÓN A INTERNET PARA CONTINUAR")
         }finally {
 
-
             setIsLoading(false); 
 
         }
     };
+
+
+    const obtenerPermisoNotificacion = async () =>{
+
+        try {
+            // Solicitar el permiso de notificación
+            const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+    
+            if (result === 'granted') {
+              // Permiso concedido, realizar las acciones necesarias aquí
+              console.log('Permiso de notificación concedido');
+              setTimeout(() => {
+                setIsLoading(false);
+              }, 1000); 
+
+            } else {
+              // Permiso denegado, puedes manejarlo aquí según tus necesidades
+              console.log('Permiso de notificación denegado');
+              setIsLoading(false)
+
+            }
+          } catch (error) {
+            console.error('Error al solicitar el permiso de notificación:', error);
+          }
+    
+
+
+    }
+
     
     if (isLoading) {
         console.log("loadinnkkkkkkkkkkkkkkk")

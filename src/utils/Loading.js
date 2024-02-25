@@ -11,7 +11,7 @@ export default function Loading(props) {
       overlayBackgroundColor="transparent"
       overlayStyle={{
         height: 100,
-        width: 200,
+        width: 300,
         backgroundColor: '#fff',
         borderColor: color,
 
